@@ -64,6 +64,7 @@ class UavMonitor
 
 		int ch = ' ';
 		bool done = false;
+		bool kill = false;
 };
 
 void killCb(const std_msgs::Bool::ConstPtr& msg, UavMonitor *);

@@ -67,7 +67,7 @@ void baselineCb(const std_msgs::Float32::ConstPtr& msg, UavMonitor *uav)
 }
 void killCb(const std_msgs::Bool::ConstPtr& msg, UavMonitor *uav)
 {
-	uav->done = msg->data;
+	uav->kill = msg->data;
 	//std::cout << (msg->data ? "True\r" : "False\r") << std::endl;
 }
 
@@ -249,7 +249,7 @@ void *offboard_control(void *arg){
     offboard_error_exit(offboard_result, "Offboard start failed");
     offboard_log(offb_mode, "Offboard started");
 
-	while(!m->done){
+	while(!m->kill){
 		attitude.thrust_value =	m->calculate_thrust();			
 		attitude.roll_deg = m->calculate_roll();
 		attitude.pitch_deg = m->calculate_pitch();
@@ -262,7 +262,7 @@ void *offboard_control(void *arg){
 	offboard_log(offb_mode, "Offboard stopped");
     
 	const Action::Result land_result = action->land();
-
+	m->done = true;
 	pthread_exit(NULL);
 }
 
