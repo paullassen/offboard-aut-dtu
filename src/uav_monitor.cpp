@@ -63,6 +63,7 @@ inline void offboard_log(const std::string& offb_mode, const std::string msg)
 void baselineCb(const std_msgs::Float32::ConstPtr& msg, UavMonitor *uav)
 {
 	uav->baseline = msg->data;
+	std::cout << "BASELINE : " << uav->baseline << "\r" <<std::endl;
 }
 void killCb(const std_msgs::Bool::ConstPtr& msg, UavMonitor *uav)
 {
