@@ -51,6 +51,13 @@ def intro():
     print("Press I/K to change Kpz  by +/- 0.01")
     print("Press O/L to change Kdz  by +/- 0.01")
 
+def printBool(boolean):
+    if boolean:
+        return "OK"
+    else:
+        return "FAIL"
+
+
 class Status:
     def __init__(self):
         self.health = test.Health()
@@ -104,7 +111,7 @@ class Status:
 
     def print_status(self, first=False):
         if not first:
-            print("\r\033[19A")
+            print("\r\033[26A")
         else:
             pass
         zzx = round(self.zz.x,5)
@@ -136,7 +143,14 @@ class Status:
         pr = round(self.attitude.x, 5)
         pp = round(self.attitude.y, 5)
         pw = round(self.attitude.z, 5)
-        
+        health = self.health;            
+        print("------------------------------------------------------------")
+        print("Health".ljust(55))
+        print("------------------------------------------------------------")
+        print((" Gyro  : "+printBool(health.gyro)).ljust(15) + (" Local    : "+printBool(health.local)).ljust(20))
+        print((" Accel : "+printBool(health.accel)).ljust(15) + (" Global   : "+printBool(health.globe)).ljust(20))
+        print((" Mag   : "+printBool(health.mag)).ljust(15) + (" Home     : "+printBool(health.home)).ljust(20))
+        print((" Level : "+printBool(health.level)).ljust(15) + (" Battery  : "+str(round(health.battery,5)).ljust(20)))
         print("------------------------------------------------------------")
         print("Current_Ang".ljust(15)+"Target_Ang".ljust(15)+"Errors".ljust(15)+"Gains".ljust(10))
         print("------------------------------------------------------------")

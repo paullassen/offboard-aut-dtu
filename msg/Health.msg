@@ -3,6 +3,6 @@ bool accel
 bool mag
 bool level
 bool local
-bool global
+bool globe
 bool home
 float32 battery

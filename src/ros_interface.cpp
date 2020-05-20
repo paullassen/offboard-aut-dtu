@@ -68,7 +68,11 @@ int main(int argc, char ** argv){
 									("test/kill", 10, boost::bind(killCb, _1, &uav));
 	ros::Subscriber baseline_sub = nh.subscribe<std_msgs::Float32>
 									("test/baseline",10, boost::bind(baselineCb, _1, &uav));
-	ros::Rate rate(10.0);
+    ros::Subscriber mocap_sub = nh.subscribe<geometry_msgs::PoseStamped>
+                                    ("test/mocap", 10, boost::bind(mocapCb, _1, &uav));
+    ros::Subscriber target_sub = nh.subscribe<geometry_msgs::Point>
+                                    ("test/mocap", 10, boost::bind(targetCb, _1, &uav));
+	ros::Rate rate(3.0);
 
 	//Create ROS msgs
 	//std_msgs::Bool state;
@@ -78,13 +82,13 @@ int main(int argc, char ** argv){
 	
 	
 	// Start Battery Subscriber
-	Telemetry::Result set_rate_result = telemetry->set_rate_battery(1.0);
+	Telemetry::Result set_rate_result = telemetry->set_rate_battery(2.0);
 	if (set_rate_result != Telemetry::Result::Success) {
 	    std::cout << "Setting rate failed:" << set_rate_result<< std::endl;
 	}	
 
 	// Start Attitude Subscriber
-	set_rate_result = telemetry->set_rate_attitude(1.0);
+	set_rate_result = telemetry->set_rate_attitude(2.0);
 	if (set_rate_result != Telemetry::Result::Success) {
 	    std::cout << "Setting rate failed:" << set_rate_result<< std::endl;
 	}	
@@ -108,7 +112,7 @@ int main(int argc, char ** argv){
 	offboard_args[2] = &action;
 
     Action::Result arm_result = action->arm();
-    //action_error_exit(arm_result, "Arming failed");
+	action_error_exit(arm_result, "Arming failed");
     std::cout << "Armed" << std::endl;
 
 	pthread_t offboard_thread;
@@ -117,15 +121,7 @@ int main(int argc, char ** argv){
 		
 		ros::spinOnce();
 		
-		health.gyro = uav.gyro_cal;
-		health.accel = uav.accel_cal;
-		health.mag = uav.mag_cal;
-		health.level = uav.level_cal;
-		health.local = uav.local_ok;
-		health.global = uav.global_ok;
-		health.home = uav.home_ok;
-		health.battery = uav.battery;
-
+		health = uav.health;
 		attitude.x = uav.roll;
 		attitude.y = uav.pitch;
 		attitude.z = uav.yaw;
@@ -134,6 +130,7 @@ int main(int argc, char ** argv){
 		health_pub.publish(health);
 		rate.sleep();
 	}
+
 	pthread_join(offboard_thread, NULL);
 	return 0;
 }
