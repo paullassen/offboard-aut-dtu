@@ -8,7 +8,6 @@
 #include <future>
 #include <iostream>
 #include <thread>
-#include <boost/bind.hpp>
 
 #include <unistd.h>
 #include <string.h>
