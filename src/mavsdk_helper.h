@@ -24,6 +24,7 @@ using std::this_thread::sleep_for;
 #define NORMAL_CONSOLE_TEXT "\033[0m" // Restore normal console colour
 void action_error_exit(Action::Result result, const std::string& message);
 void offboard_error_exit(Offboard::Result result, const std::string& message);
+void offboard_log(const std::string& offb_mode, const std::string msg);
 void connection_error_exit(ConnectionResult result, const std::string& message);
 void usage(std::string bin_name);
 

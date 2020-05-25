@@ -20,6 +20,8 @@
 #include "mavsdk_helper.h"
 
 
+
+
 using namespace mavsdk;
 class UavMonitor
 {
@@ -96,13 +98,24 @@ class UavMonitor
 		int ch = ' ';
 		bool done = false;
 		bool kill = false;
+
+		// Callback Functions
+		void killCb(const std_msgs::Bool::ConstPtr& msg);
+		void baselineCb(const std_msgs::Float32::ConstPtr& msg);
+		void targetCb(const geometry_msgs::Point::ConstPtr& msg);
+		void mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg);
+
+		//Threads
+		static void *offboard_control(void *arg);
+		static void *ros_run(void *args);
+
 };
 
-void killCb(const std_msgs::Bool::ConstPtr& msg, UavMonitor *);
-void baselineCb(const std_msgs::Float32::ConstPtr& msg, UavMonitor *);
-void targetCb(const geometry_msgs::Point::ConstPtr& msg, UavMonitor *);
 
-void mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg, UavMonitor *);
-void *offboard_control(void *arg);
-
+struct thread_data{
+	UavMonitor * uav;
+	ros::NodeHandle * nh;
+	std::shared_ptr<Offboard> offboard;
+	std::shared_ptr<Action> action; 
+};
 #endif

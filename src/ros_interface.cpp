@@ -64,14 +64,6 @@ int main(int argc, char ** argv){
 									("test/health", 10);
 	ros::Publisher att_pub = nh.advertise<geometry_msgs::Point>
 									("test/attitude", 10);
-	ros::Subscriber kill_switch = nh.subscribe<std_msgs::Bool>
-									("test/kill", 10, boost::bind(killCb, _1, &uav));
-	ros::Subscriber baseline_sub = nh.subscribe<std_msgs::Float32>
-									("test/baseline",10, boost::bind(baselineCb, _1, &uav));
-    ros::Subscriber mocap_sub = nh.subscribe<geometry_msgs::PoseStamped>
-                                    ("test/mocap", 10, boost::bind(mocapCb, _1, &uav));
-    ros::Subscriber target_sub = nh.subscribe<geometry_msgs::Point>
-                                    ("test/mocap", 10, boost::bind(targetCb, _1, &uav));
 	ros::Rate rate(3.0);
 
 	//Create ROS msgs
@@ -106,20 +98,21 @@ int main(int argc, char ** argv){
 		uav.set_angle(angle);		
 	});
 
-	void *offboard_args[3];
-	offboard_args[0] = &uav;
-	offboard_args[1] = &offboard;
-	offboard_args[2] = &action;
+
+	struct thread_data thread_args;
+	thread_args.uav = &uav;
+	thread_args.offboard = offboard;
+	thread_args.action = action;
+	thread_args.nh = &nh;
 
     Action::Result arm_result = action->arm();
 	action_error_exit(arm_result, "Arming failed");
     std::cout << "Armed" << std::endl;
 
-	pthread_t offboard_thread;
-	pthread_create(&offboard_thread, NULL, offboard_control, offboard_args);
+	pthread_t offboard_thread, callback_thread;
+	pthread_create(&callback_thread, NULL, &UavMonitor::ros_run, (void *)&thread_args);
+	pthread_create(&offboard_thread, NULL, &UavMonitor::offboard_control, (void *)&thread_args);
 	while(!uav.done){
-		
-		ros::spinOnce();
 		
 		health = uav.health;
 		attitude.x = uav.roll;
@@ -132,6 +125,9 @@ int main(int argc, char ** argv){
 	}
 
 	pthread_join(offboard_thread, NULL);
+	ros::shutdown();
+	pthread_join(callback_thread, NULL);
+
 	return 0;
 }
 

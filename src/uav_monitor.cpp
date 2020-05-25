@@ -25,80 +25,42 @@
 
 using namespace mavsdk;
 
-#define ERROR_CONSOLE_TEXT "\033[31m" // Turn text on console red
-#define TELEMETRY_CONSOLE_TEXT "\033[34m" // Turn text on console blue
-#define NORMAL_CONSOLE_TEXT "\033[0m" // Restore normal console colour
-
-//UavMonitor::UavMonitor(){}
-inline void action_error_exit(Action::Result result, const std::string& message)
-{
-    if (result != Action::Result::Success) {
-        std::cerr << ERROR_CONSOLE_TEXT << message << result << NORMAL_CONSOLE_TEXT << std::endl;
-        exit(EXIT_FAILURE);
-    }
+void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr& msg){
+    tx = msg->x;
+    ty = msg->y;
+    tz = msg->z;
 }
 
-// Handles Offboard's result
-inline void offboard_error_exit(Offboard::Result result, const std::string& message)
-{
-    if (result != Offboard::Result::Success) {
-        std::cerr << ERROR_CONSOLE_TEXT << message << result << NORMAL_CONSOLE_TEXT << std::endl;
-        exit(EXIT_FAILURE);
-    }
-}
+void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
+    float last_x = x;
+    float last_y = y;
+    float last_z = z;
 
-// Handles connection result
-inline void connection_error_exit(ConnectionResult result, const std::string& message)
-{
-    if (result != ConnectionResult::Success) {
-        std::cerr << ERROR_CONSOLE_TEXT << message << result << NORMAL_CONSOLE_TEXT << std::endl;
-        exit(EXIT_FAILURE);
-    }
-}
-
-// Logs during Offboard control
-inline void offboard_log(const std::string& offb_mode, const std::string msg)
-{
-    std::cout << "[" << offb_mode << "] " << msg << std::endl;
-}
-
-void targetCb(const geometry_msgs::Point::ConstPtr& msg, UavMonitor *uav){
-    uav->tx = msg->x;
-    uav->ty = msg->y;
-    uav->tz = msg->z;
-}
-
-void mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg, UavMonitor *uav){
-    float last_x = uav->x;
-    float last_y = uav->y;
-    float last_z = uav->z;
-
-    uav->x = msg->pose.position.x;
-    uav->y = -msg->pose.position.y;
-    uav->z = msg->pose.position.z;
+    x =  msg->pose.position.x;
+    y = -msg->pose.position.y;
+    z =  msg->pose.position.z;
 
     
-    ros::Duration dt = msg->header.stamp - uav->last_time;
+    ros::Duration dt = msg->header.stamp - last_time;
     
-    uav->dx = (uav->x-last_x)/dt.toSec();
-    uav->dy = (uav->y-last_y)/dt.toSec();
-    uav->dz = (uav->z-last_z)/dt.toSec();
+    dx = (x-last_x)/dt.toSec();
+    dy = (y-last_y)/dt.toSec();
+    dz = (z-last_z)/dt.toSec();
     
-    uav->last_time = msg->header.stamp;
+    last_time = msg->header.stamp;
 
-    uav->calculate_error();
+    calculate_error();
 }
 
-void baselineCb(const std_msgs::Float32::ConstPtr& msg, UavMonitor *uav)
+void UavMonitor::baselineCb(const std_msgs::Float32::ConstPtr& msg)
 {
-	uav->baseline = msg->data;
-	std::cerr << "BASELINE : " << uav->baseline << "\r" <<std::flush;
+	baseline = msg->data;
+	std::cerr << "BASELINE : " << baseline << "\r" <<std::flush;
 }
 
-void killCb(const std_msgs::Bool::ConstPtr& msg, UavMonitor *uav)
+void UavMonitor::killCb(const std_msgs::Bool::ConstPtr& msg)
 {
-	uav->kill = msg->data;
-	//std::cout << (msg->data ? "True\r" : "False\r") << std::endl;
+	kill = msg->data;
 }
 
 //Health Functions
@@ -138,14 +100,15 @@ void UavMonitor::set_angle(Telemetry::EulerAngle angle){
 }
 
 //Other Functions
-void *offboard_control(void *arg){
+void *UavMonitor::offboard_control(void *arg){
 
     const std::string offb_mode = "ATTITUDE";
+	
+	struct thread_data *args = (struct thread_data *)arg;
 
-	void **args = (void **)arg;
-	UavMonitor *m =(UavMonitor *)args[0];
-	std::shared_ptr<mavsdk::Offboard> offboard = *(std::shared_ptr<mavsdk::Offboard> *)args[1];
-	std::shared_ptr<mavsdk::Action> action = *(std::shared_ptr<mavsdk::Action> *)args[2];
+	UavMonitor *m = args->uav;
+	std::shared_ptr<mavsdk::Offboard> offboard = args->offboard;
+	std::shared_ptr<mavsdk::Action> action = args->action;
 	
 	ros::Rate rate(20);
 
@@ -218,4 +181,25 @@ void UavMonitor::calculate_error(){
     edx = dx;
     edy = dy;
     edz = dz;
+}
+
+void *UavMonitor::ros_run(void * arg){
+
+	struct thread_data *args = (struct thread_data *)arg;
+	
+	UavMonitor *uav = args->uav;
+	ros::NodeHandle * nh = args->nh;
+
+
+	ros::Subscriber kill_switch = nh->subscribe<std_msgs::Bool>
+								("test/kill", 10, &UavMonitor::killCb, uav);
+	ros::Subscriber baseline_sub = nh->subscribe<std_msgs::Float32>
+								("test/baseline",10, &UavMonitor::baselineCb, uav);
+    ros::Subscriber mocap_sub = nh->subscribe<geometry_msgs::PoseStamped>
+                                ("test/mocap", 10, &UavMonitor::mocapCb, uav);
+    ros::Subscriber target_sub = nh->subscribe<geometry_msgs::Point>
+                                ("test/target", 10, &UavMonitor::targetCb, uav);
+	ros::spin();
+
+	pthread_exit(NULL);
 }
