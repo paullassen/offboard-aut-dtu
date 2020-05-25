@@ -132,6 +132,13 @@ void *UavMonitor::offboard_control(void *arg){
 		rate.sleep();
 	}
 
+	attitude.thrust_value = 0.0f;
+	attitude.roll_deg	= 0.0f;
+	attitude.pitch_deg	= 0.0f;
+	attitude.yaw_deg	= 0.0f;
+	offboard->set_attitude(attitude);
+
+
 	offboard_result = offboard->stop();
     offboard_error_exit(offboard_result, "Offboard stop failed: ");
 	offboard_log(offb_mode, "Offboard stopped");
