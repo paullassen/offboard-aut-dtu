@@ -63,6 +63,10 @@ int main(int argc, char ** argv){
 									("test/health", 10);
 	ros::Publisher att_pub = nh.advertise<geometry_msgs::Point>
 									("test/attitude", 10);
+	ros::Publisher err_pub = nh.advertise<geometry_msgs::Point>
+									("test/err", 10);
+	ros::Publisher erd_pub = nh.advertise<geometry_msgs::Point>
+									("test/erd", 10);
 	ros::Rate rate(3.0);
 
 	//Create ROS msgs
@@ -70,6 +74,9 @@ int main(int argc, char ** argv){
 	//std_msgs::Float32 volt;
 	offboard::Health health;
 	geometry_msgs::Point attitude;
+	geometry_msgs::Point err;
+	geometry_msgs::Point erd;
+
 	
 	
 	// Start Battery Subscriber
@@ -123,8 +130,18 @@ int main(int argc, char ** argv){
 		attitude.y = uav.pitch;
 		attitude.z = uav.yaw;
 
+		err.x = uav.ex;
+		err.y = uav.ey;
+		err.z = uav.ez;
+
+		erd.x = uav.edx;
+		erd.y = uav.edy;
+		erd.z = uav.edz;
+
 		att_pub.publish(attitude);
 		health_pub.publish(health);
+		err_pub.publish(err);
+		erd_pub.publish(erd);
 		rate.sleep();
 	}
 

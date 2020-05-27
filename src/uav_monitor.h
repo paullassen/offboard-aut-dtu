@@ -76,7 +76,8 @@ class UavMonitor
 		float roll = 0;
 		float pitch = 0;
 		float yaw = 0;	
-
+	
+		float offset_yaw = 0.0;
 		// Set Functions
 		void set_health(Telemetry::Health);
 		void set_battery(Telemetry::Battery);

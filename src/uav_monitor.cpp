@@ -3,6 +3,7 @@
 #include <std_msgs/Float32.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <tf/tf.h>
 
 #include <chrono>
 #include <cmath>
@@ -44,6 +45,24 @@ void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr& msg){
 }
 
 void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
+
+	if (offset_yaw == 0.0){
+		//create quaternion
+		tf::Quaternion q(
+			msg->pose.orientation.x,
+			msg->pose.orientation.y,
+			msg->pose.orientation.z,
+			msg->pose.orientation.w
+			)
+		//get rotation matrix
+		tf::Matrix3x3 m(q);
+		double off_r, off_p, off_y;
+		//get r,p,y
+		m.getRPY(off_r, off_p, off_y);
+		//get offset
+		offset_yaw = yaw - (float) off_y;
+	}
+
     float last_x = x;
     float last_y = y;
     float last_z = z;
@@ -184,22 +203,22 @@ float UavMonitor::calculate_roll(){
 	double ky = kpy * ey + kdy * edy;
 	double kx = kpx * ex + kdx * edx;
 
-	double yaw_rad = yaw * M_PI/180;
+	double yaw_rad = (yaw-offset_yaw) * M_PI/180;
 
-	return saturate(kx * cos(yaw_rad) + ky * sin(yaw_rad), 3*M_PI/180);
+	return saturate(kx * cos(yaw_rad) + ky * sin(yaw_rad), 3);
 }
 
 float UavMonitor::calculate_pitch(){
 	double ky = kpy * ey + kdy * edy;
 	double kx = kpx * ex + kdx * edx;
 
-	double yaw_rad = yaw * M_PI/180;
+	double yaw_rad = (yaw-offset_yaw) * M_PI/180;
 	
-	return saturate(-kx * sin(yaw_rad) + ky * cos(yaw_rad), 3*M_PI/180);
+	return saturate(-kx * sin(yaw_rad) + ky * cos(yaw_rad), 3);
 }
 
 float UavMonitor::calculate_yaw(){
-	double yaw_rad = yaw * M_PI/180;
+	double yaw_rad = (yaw-offset_yaw) * M_PI/180;
 	return (float) yaw_rad;
 }
 
