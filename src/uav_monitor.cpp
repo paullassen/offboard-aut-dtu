@@ -157,11 +157,11 @@ void *UavMonitor::offboard_control(void *arg){
 	attitude.yaw_deg	= 0.0f;
 	offboard->set_attitude(attitude);
 
-
+/*
 	offboard_result = offboard->stop();
     offboard_error_exit(offboard_result, "Offboard stop failed: ");
 	offboard_log(offb_mode, "Offboard stopped");
-    
+*/  
 	sleep(1);
 	std::cout << "Sending kill command ..." << std::endl;
 
