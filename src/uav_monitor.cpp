@@ -58,9 +58,14 @@ void UavMonitor::baselineCb(const std_msgs::Float32::ConstPtr& msg)
 	std::cerr << "BASELINE : " << baseline << "\r" <<std::flush;
 }
 
-void UavMonitor::killCb(const std_msgs::Bool::ConstPtr& msg)
+void  UavMonitor::killCb(const std_msgs::Bool::ConstPtr& msg)
 {
 	kill = msg->data;
+}
+
+void UavMonitor::startCb(const std_msgs::Bool::ConstPtr& msg)
+{
+	start = msg->data;
 }
 
 //Health Functions
@@ -101,7 +106,8 @@ void UavMonitor::set_angle(Telemetry::EulerAngle angle){
 
 //Other Functions
 void *UavMonitor::offboard_control(void *arg){
-
+	
+	std::cout << "Starting control thread ..." << std::endl;
     const std::string offb_mode = "ATTITUDE";
 	
 	struct thread_data *args = (struct thread_data *)arg;
@@ -132,6 +138,7 @@ void *UavMonitor::offboard_control(void *arg){
 		rate.sleep();
 	}
 
+	std::cout << "Zeroing control inputs ..." << std::endl;
 	attitude.thrust_value = 0.0f;
 	attitude.roll_deg	= 0.0f;
 	attitude.pitch_deg	= 0.0f;
@@ -143,7 +150,11 @@ void *UavMonitor::offboard_control(void *arg){
     offboard_error_exit(offboard_result, "Offboard stop failed: ");
 	offboard_log(offb_mode, "Offboard stopped");
     
-	const Action::Result land_result = action->land();
+	sleep(1);
+	std::cout << "Sending kill command ..." << std::endl;
+
+	const Action::Result kill_result = action->kill();
+
 	m->done = true;
 	pthread_exit(NULL);
 }
@@ -192,6 +203,7 @@ void UavMonitor::calculate_error(){
 
 void *UavMonitor::ros_run(void * arg){
 
+	std::cout << "Starting Callbacks ..." << std::endl;
 	struct thread_data *args = (struct thread_data *)arg;
 	
 	UavMonitor *uav = args->uav;
@@ -206,6 +218,8 @@ void *UavMonitor::ros_run(void * arg){
                                 ("test/mocap", 10, &UavMonitor::mocapCb, uav);
     ros::Subscriber target_sub = nh->subscribe<geometry_msgs::Point>
                                 ("test/target", 10, &UavMonitor::targetCb, uav);
+	ros::Subscriber start_sub = nh->subscribe<std_msgs::Bool>
+								("test/start", 10, &UavMonitor::startCb, uav);
 	ros::spin();
 
 	pthread_exit(NULL);

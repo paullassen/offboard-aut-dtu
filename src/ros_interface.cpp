@@ -104,13 +104,18 @@ int main(int argc, char ** argv){
 	thread_args.action = action;
 	thread_args.nh = &nh;
 
+	pthread_t offboard_thread, callback_thread;
+
+	pthread_create(&callback_thread, NULL, &UavMonitor::ros_run, (void *)&thread_args);
+
     Action::Result arm_result = action->arm();
 	action_error_exit(arm_result, "Arming failed");
     std::cout << "Armed" << std::endl;
 
-	pthread_t offboard_thread, callback_thread;
-	pthread_create(&callback_thread, NULL, &UavMonitor::ros_run, (void *)&thread_args);
 	pthread_create(&offboard_thread, NULL, &UavMonitor::offboard_control, (void *)&thread_args);
+	
+	std::cout << "Starting publishers ..." << std::endl;
+
 	while(!uav.done){
 		
 		health = uav.health;
@@ -124,8 +129,14 @@ int main(int argc, char ** argv){
 	}
 
 	pthread_join(offboard_thread, NULL);
+	
+	std::cout << "Shutting down ROS ..." << std::endl;
+
 	ros::shutdown();
+
 	pthread_join(callback_thread, NULL);
+
+	std::cout << "Ending the program ..." << std::endl;
 
 	return 0;
 }

@@ -98,12 +98,14 @@ class UavMonitor
 		int ch = ' ';
 		bool done = false;
 		bool kill = false;
-
+		bool start = false;
 		// Callback Functions
 		void killCb(const std_msgs::Bool::ConstPtr& msg);
+		void startCb(const std_msgs::Bool::ConstPtr& msg);
 		void baselineCb(const std_msgs::Float32::ConstPtr& msg);
 		void targetCb(const geometry_msgs::Point::ConstPtr& msg);
 		void mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg);
+
 
 		//Threads
 		static void *offboard_control(void *arg);
