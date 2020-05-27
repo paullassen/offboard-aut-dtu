@@ -25,6 +25,18 @@
 
 using namespace mavsdk;
 
+void UavMonitor::kpCb(const geometry_msgs::Point::ConstPtr& msg){
+	kpx = msg->x;
+	kpy = msg->y;
+	kpz = msg->z;
+}
+
+void UavMonitor::kdCb(const geometry_msgs::Point::ConstPtr& msg){
+	kdx = msg->x;
+	kdy = msg->y;
+	kdz = msg->z;
+}
+
 void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr& msg){
     tx = msg->x;
     ty = msg->y;
@@ -172,23 +184,39 @@ float UavMonitor::calculate_roll(){
 	double ky = kpy * ey + kdy * edy;
 	double kx = kpx * ex + kdx * edx;
 
-	double yaw_deg = yaw * M_PI/180;
+	double yaw_rad = yaw * M_PI/180;
 
-	return (float) (kx * cos(yaw_deg) + ky * sin(yaw_deg));
+	return saturate(kx * cos(yaw_rad) + ky * sin(yaw_rad), 3*M_PI/180);
 }
 
 float UavMonitor::calculate_pitch(){
 	double ky = kpy * ey + kdy * edy;
 	double kx = kpx * ex + kdx * edx;
 
-	double yaw_deg = yaw * M_PI/180;
+	double yaw_rad = yaw * M_PI/180;
 	
-	return (float) (-kx * sin(yaw_deg) + ky * cos(yaw_deg));
+	return saturate(-kx * sin(yaw_rad) + ky * cos(yaw_rad), 3*M_PI/180);
 }
 
 float UavMonitor::calculate_yaw(){
-	double yaw_deg = yaw * M_PI/180;
-	return (float) yaw_deg;
+	double yaw_rad = yaw * M_PI/180;
+	return (float) yaw_rad;
+}
+
+float UavMonitor::saturate(double in, double minmax)
+{
+	return saturate_minmax(in, -minmax, minmax);
+}
+
+float UavMonitor::saturate_minmax(double in, double min, double max)
+{
+	if(in > max){
+		return (float) max;
+	} else if(in < min) {
+		return (float) min;
+	}
+
+	return (float) in;
 }
 
 void UavMonitor::calculate_error(){
@@ -196,9 +224,9 @@ void UavMonitor::calculate_error(){
     ey = ty - y;
     ez = tz - z;
 
-    edx = dx;
-    edy = dy;
-    edz = dz;
+    edx = -dx;
+    edy = -dy;
+    edz = -dz;
 }
 
 void *UavMonitor::ros_run(void * arg){
@@ -220,6 +248,11 @@ void *UavMonitor::ros_run(void * arg){
                                 ("test/target", 10, &UavMonitor::targetCb, uav);
 	ros::Subscriber start_sub = nh->subscribe<std_msgs::Bool>
 								("test/start", 10, &UavMonitor::startCb, uav);
+	ros::Subscriber kp_sub = nh->subscribe<geometry_msgs::Point>
+								("test/kp", 10, &UavMonitor::kpCb, uav);
+	ros::Subscriber kd_sub = nh->subscribe<geometry_msgs::Point>
+								("test/kd", 10, &UavMonitor::kdCb, uav);
+								
 	ros::spin();
 
 	pthread_exit(NULL);

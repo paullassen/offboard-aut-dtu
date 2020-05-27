@@ -87,6 +87,10 @@ class UavMonitor
 		float calculate_pitch();
 		float calculate_yaw();
         void calculate_error();
+
+		float saturate(double in, double minmax);
+		float saturate_minmax(double in, double min, double max);
+
 		// Get Functions
 		bool	get_health(void);
 		float	get_battery(void);
@@ -99,13 +103,15 @@ class UavMonitor
 		bool done = false;
 		bool kill = false;
 		bool start = false;
+
 		// Callback Functions
+		void kpCb(const geometry_msgs::Point::ConstPtr& msg);
+		void kdCb(const geometry_msgs::Point::ConstPtr& msg);
 		void killCb(const std_msgs::Bool::ConstPtr& msg);
 		void startCb(const std_msgs::Bool::ConstPtr& msg);
 		void baselineCb(const std_msgs::Float32::ConstPtr& msg);
 		void targetCb(const geometry_msgs::Point::ConstPtr& msg);
 		void mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg);
-
 
 		//Threads
 		static void *offboard_control(void *arg);
