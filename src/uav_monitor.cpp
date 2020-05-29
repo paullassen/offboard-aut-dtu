@@ -53,7 +53,7 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 			msg->pose.orientation.y,
 			msg->pose.orientation.z,
 			msg->pose.orientation.w
-			)
+			);
 		//get rotation matrix
 		tf::Matrix3x3 m(q);
 		double off_r, off_p, off_y;
