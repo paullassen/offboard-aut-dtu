@@ -256,6 +256,8 @@ def main():
         if key != []:
             for k in key:
                 if chr(k) == 'a':
+                    stat.kill()
+                    stat.publish()
                     done=True
                     #print("\n"*13)
                 elif chr(k) == 'q':
