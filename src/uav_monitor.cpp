@@ -152,7 +152,7 @@ void *UavMonitor::offboard_control(void *arg){
 	Offboard::Attitude attitude;
 	attitude.roll_deg	= 0.0f;
 	attitude.pitch_deg	= -1.0f;
-	attitude.yaw_deg	= 0.0f;
+	attitude.yaw_deg		= 0.0f;
 	attitude.thrust_value = 0.1f;
 
 	offboard->set_attitude(attitude);
@@ -196,7 +196,8 @@ float UavMonitor::calculate_thrust(){
 
 	double scale = cos((double) roll * M_PI/180)*cos((double) pitch * M_PI/180);
 
-	return thrust/((float)scale);
+	uav_thrust = thrust / abs((float)scale);
+	return uav_thrust;
 }
 
 float UavMonitor::calculate_pitch(){
@@ -204,8 +205,8 @@ float UavMonitor::calculate_pitch(){
 	double kx = (kpx * ex + kdx * edx) * 180/M_PI;
 
 	double yaw_rad = (yaw-offset_yaw) * M_PI/180;
-
-	return saturate(-kx * cos(yaw_rad) + ky * sin(yaw_rad), 3);
+	uav_pitch = saturate(-kx * cos(yaw_rad) + ky * sin(yaw_rad), 3);
+	return uav_pitch;
 }
 
 float UavMonitor::calculate_roll(){
@@ -214,11 +215,13 @@ float UavMonitor::calculate_roll(){
 
 	double yaw_rad = (yaw-offset_yaw) * M_PI/180;
 	
-	return saturate(-kx * sin(yaw_rad) + ky * cos(yaw_rad), 3);
+	uav_roll = saturate(-kx * sin(yaw_rad) + ky * cos(yaw_rad), 3);
+	return uav_roll;
 }
 
 float UavMonitor::calculate_yaw(){
 	double yaw_rad = (yaw-offset_yaw) * M_PI/180;
+	uav_yaw = (float) yaw_rad;
 	return (float) yaw_rad;
 }
 

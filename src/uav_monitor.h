@@ -66,9 +66,12 @@ class UavMonitor
 
 		float baseline = 0.1;
 		
+		float uav_thrust = 0;
+		float uav_pitch = 0;
+		float uav_roll = 0;
+		float uav_yaw = 0;
 		// Health
 		offboard::Health health;
-
 		// Battery
 		float battery = 0.0;
 

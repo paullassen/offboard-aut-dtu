@@ -87,19 +87,19 @@ class Status:
         self.health = msg
 
     def attCb(self, msg):
-        self.attitude = msg
+        self.attitude = msg.point
 
     def posCb(self, msg):
-        self.pos= msg
+        self.pos= msg.point
 
     def velCb(self, msg):
-        self.vel = msg
+        self.vel = msg.point
 
     def errCb(self, msg):
-        self.err = msg
+        self.err = msg.point
 
     def erdCb(self, msg):
-        self.erd = msg
+        self.erd = msg.point
 
     def publish(self):
         self.kp_pub.publish(self.kp)
@@ -242,11 +242,11 @@ def main():
     stat = Status()
 
     rospy.Subscriber('test/health', test.Health, stat.healthCb)
-    rospy.Subscriber('test/attitude', geo.Point, stat.attCb)
-    rospy.Subscriber('test/pose', geo.Point, stat.posCb)
-    rospy.Subscriber('test/vel', geo.Point, stat.velCb)
-    rospy.Subscriber('test/err', geo.Point, stat.errCb)
-    rospy.Subscriber('test/erd', geo.Point, stat.erdCb)
+    rospy.Subscriber('test/attitude', geo.PointStamped, stat.attCb)
+    rospy.Subscriber('test/pose', geo.PointStamped, stat.posCb)
+    rospy.Subscriber('test/vel', geo.PointStamped, stat.velCb)
+    rospy.Subscriber('test/err', geo.PointStamped, stat.errCb)
+    rospy.Subscriber('test/erd', geo.PointStamped, stat.erdCb)
 
     intro()
     stat.print_status(True)

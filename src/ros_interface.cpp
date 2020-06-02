@@ -2,7 +2,9 @@
 #include <offboard/Health.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Header.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/PointStamped.h>
 #include <chrono>
 #include <cmath>
 #include <future>
@@ -61,23 +63,29 @@ int main(int argc, char ** argv){
 	// Create ROS publishers
 	ros::Publisher health_pub = nh.advertise<offboard::Health>
 									("test/health", 10);
-	ros::Publisher att_pub = nh.advertise<geometry_msgs::Point>
+	ros::Publisher att_pub = nh.advertise<geometry_msgs::PointStamped>
 									("test/attitude", 10);
-	ros::Publisher err_pub = nh.advertise<geometry_msgs::Point>
+	ros::Publisher err_pub = nh.advertise<geometry_msgs::PointStamped>
 									("test/err", 10);
-	ros::Publisher erd_pub = nh.advertise<geometry_msgs::Point>
+	ros::Publisher erd_pub = nh.advertise<geometry_msgs::PointStamped>
 									("test/erd", 10);
-	ros::Rate rate(3.0);
+	ros::Publisher in_pub = nh.advertise<geometry_msgs::PointStamped>
+									("test/att_in", 10);
+	ros::Publisher thrust_pub = nh.advertise<std_msgs::Float32>
+									("test/thrust", 10);
+	ros::Rate rate(20.0);
 
 	//Create ROS msgs
 	//std_msgs::Bool state;
 	//std_msgs::Float32 volt;
 	offboard::Health health;
-	geometry_msgs::Point attitude;
-	geometry_msgs::Point err;
-	geometry_msgs::Point erd;
-
-	
+	geometry_msgs::PointStamped attitude;
+	geometry_msgs::PointStamped err;
+	geometry_msgs::PointStamped erd;
+	geometry_msgs::PointStamped in;
+	std_msgs::Float32 thrust;
+	std_msgs::Header header;
+	header.stamp = ros::Time::now();
 	
 	// Start Battery Subscriber
 	Telemetry::Result set_rate_result = telemetry->set_rate_battery(2.0);
@@ -86,7 +94,7 @@ int main(int argc, char ** argv){
 	}	
 
 	// Start Attitude Subscriber
-	set_rate_result = telemetry->set_rate_attitude(2.0);
+	set_rate_result = telemetry->set_rate_attitude(20.0);
 	if (set_rate_result != Telemetry::Result::Success) {
 	    std::cout << "Setting rate failed:" << set_rate_result<< std::endl;
 	}	
@@ -126,22 +134,38 @@ int main(int argc, char ** argv){
 	while(!uav.done){
 		
 		health = uav.health;
-		attitude.x = uav.roll;
-		attitude.y = uav.pitch;
-		attitude.z = uav.yaw;
 
-		err.x = uav.ex;
-		err.y = uav.ey;
-		err.z = uav.ez;
+		header.stamp = ros::Time::now();
 
-		erd.x = uav.edx;
-		erd.y = uav.edy;
-		erd.z = uav.edz;
+		attitude.point.x = uav.roll;
+		attitude.point.y = uav.pitch;
+		attitude.point.z = uav.yaw;
+		attitude.header = header;
+
+		err.point.x = uav.ex;
+		err.point.y = uav.ey;
+		err.point.z = uav.ez;
+		err.header = header;
+
+		erd.point.x = uav.edx;
+		erd.point.y = uav.edy;
+		erd.point.z = uav.edz;
+		erd.header = header;
+
+		in.point.x = uav.uav_roll;
+		in.point.y = uav.uav_pitch;
+		in.point.z = uav.uav_yaw;
+		in.header = header;
+
+		thrust.data = uav.uav_thrust;
+
 
 		att_pub.publish(attitude);
 		health_pub.publish(health);
 		err_pub.publish(err);
 		erd_pub.publish(erd);
+		in_pub.publish(in);
+		thrust_pub.publish(thrust);
 		rate.sleep();
 	}
 
