@@ -197,12 +197,12 @@ class Status:
         self.kp.z -= 0.01
 
     def incKpxy(self):
-        self.kp.x += 0.01
-        self.kp.y += 0.01
+        self.kp.x += 0.1
+        self.kp.y += 0.1
 
     def decKpxy(self):
-        self.kp.x -= 0.01
-        self.kp.y -= 0.01
+        self.kp.x -= 0.1
+        self.kp.y -= 0.1
 
     def incKdz(self):
         self.kd.z += 0.01 
