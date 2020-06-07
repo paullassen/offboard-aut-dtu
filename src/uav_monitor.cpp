@@ -213,8 +213,8 @@ float UavMonitor::calculate_thrust(){
 }
 
 float UavMonitor::calculate_pitch(){
-	double ky = (kpy * ey + kdy * edy) * 180/M_PI;
-	double kx = (kpx * ex + kdx * edx) * 180/M_PI;
+	double ky = (kpy * ey + kdy * edy);
+	double kx = (kpx * ex + kdx * edx);
 
 	double yaw_rad = (yaw-offset_yaw) * M_PI/180;
 	uav_pitch = saturate(-kx * cos(yaw_rad) + ky * sin(yaw_rad), 6);
@@ -222,8 +222,8 @@ float UavMonitor::calculate_pitch(){
 }
 
 float UavMonitor::calculate_roll(){
-	double ky = (kpy * ey + kdy * edy) * 180/M_PI;
-	double kx = (kpx * ex + kdx * edx) * 180/M_PI;
+	double ky = (kpy * ey + kdy * edy);
+	double kx = (kpx * ex + kdx * edx);
 
 	double yaw_rad = (yaw-offset_yaw) * M_PI/180;
 	
