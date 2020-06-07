@@ -213,7 +213,7 @@ float UavMonitor::calculate_thrust(){
 	double scale = cos((double) roll * M_PI/180)*cos((double) pitch * M_PI/180);
 
 	uav_thrust = thrust; // / scale;
-	return saturate_minmax(uav_thrust, 0, 0.25);
+	return saturate_minmax(uav_thrust, 0, 0.30);
 }
 
 float UavMonitor::calculate_pitch(){
