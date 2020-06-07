@@ -31,3 +31,4 @@ void usage(std::string bin_name);
 void wait_until_discover(Mavsdk& dc);
 
 #endif
+

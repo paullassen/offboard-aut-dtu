@@ -151,8 +151,8 @@ include_directories(
 #add_executable(att src/att.cpp)
 #target_link_libraries(att ${catkin_LIBRARIES})
 
-add_library(uav_monitor src/uav_monitor.h src/uav_monitor.cpp)
 add_library(mavsdk_helper src/mavsdk_helper.h src/mavsdk_helper.cpp)
+add_library(uav_monitor src/uav_monitor.h src/uav_monitor.cpp)
 
 target_link_libraries(mavsdk_helper
     MAVSDK::mavsdk_telemetry

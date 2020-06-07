@@ -60,7 +60,7 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 		//get r,p,y
 		m.getRPY(off_r, off_p, off_y);
 		//get offset
-		offset_yaw = yaw - (float) off_y;
+		offset_yaw = yaw - (float) off_y*180/M_PI;
 	}
 
     float last_x = x;
