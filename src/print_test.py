@@ -211,12 +211,12 @@ class Status:
         self.kd.z -= 0.01
     
     def incKdxy(self):
-        self.kd.x += 0.01
-        self.kd.y += 0.01
+        self.kd.x += 0.1
+        self.kd.y += 0.1
 
     def decKdxy(self):
-        self.kd.x -= 0.01
-        self.kd.y -= 0.01
+        self.kd.x -= 0.1
+        self.kd.y -= 0.1
 
     def incBl(self):
         self.bl.data += 0.01
