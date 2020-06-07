@@ -38,6 +38,12 @@ void UavMonitor::kdCb(const geometry_msgs::Point::ConstPtr& msg){
 	kdz = msg->z;
 }
 
+void UavMonitor::kiCb(const geometry_msgs::Point::ConstPtr& msg){
+	kix = msg->x;
+	kiy = msg->y;
+	kiz = msg->z;
+}
+
 void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr& msg){
     tx = msg->x;
     ty = msg->y;
@@ -208,7 +214,7 @@ void *UavMonitor::offboard_control(void *arg){
 
 float UavMonitor::calculate_thrust(){
 	float thrust = baseline;
-	thrust += kpz * ez + kdz * edz;
+	thrust += kpz * ez + kdz * edz + kiz * eiz;
 
 	double scale = cos((double) roll * M_PI/180)*cos((double) pitch * M_PI/180);
 
@@ -266,6 +272,10 @@ void UavMonitor::calculate_error(){
     edx = -dx;
     edy = -dy;
     edz = -dz;
+
+	eix += ex;
+	eiy += ey;
+	eiz += ez;
 }
 
 void *UavMonitor::ros_run(void * arg){
@@ -291,6 +301,8 @@ void *UavMonitor::ros_run(void * arg){
 								("test/kp", 10, &UavMonitor::kpCb, uav);
 	ros::Subscriber kd_sub = nh->subscribe<geometry_msgs::Point>
 								("test/kd", 10, &UavMonitor::kdCb, uav);
+	ros::Subscriber ki_sub = nh->subscribe<geometry_msgs::Point>
+								("test/ki", 10, &UavMonitor::kiCb, uav);
 								
 	ros::spin();
 

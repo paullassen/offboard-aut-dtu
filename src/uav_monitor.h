@@ -111,6 +111,7 @@ class UavMonitor
 		// Callback Functions
 		void kpCb(const geometry_msgs::Point::ConstPtr& msg);
 		void kdCb(const geometry_msgs::Point::ConstPtr& msg);
+		void kiCb(const geometry_msgs::Point::ConstPtr& msg);
 		void killCb(const std_msgs::Bool::ConstPtr& msg);
 		void startCb(const std_msgs::Bool::ConstPtr& msg);
 		void baselineCb(const std_msgs::Float32::ConstPtr& msg);
