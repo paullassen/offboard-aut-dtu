@@ -60,7 +60,11 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 		//get r,p,y
 		m.getRPY(off_r, off_p, off_y);
 		//get offset
-		offset_yaw = yaw - (float) off_y*180/M_PI;
+		offset_yaw =  - (float) off_y*180/M_PI - yaw;
+		std::cout << "Setting Offset ..." << std::cout;
+		std::cout << "\t Mocap yaw: " << off_y*180/M_PI << std::cout;
+		std::cout << "\t   Est yaw: " << yaw;
+		std::cout << "\tOffset yaw: " << offset_yaw;
 	}
 
     float last_x = x;
@@ -216,7 +220,7 @@ float UavMonitor::calculate_pitch(){
 	double ky = (kpy * ey + kdy * edy);
 	double kx = (kpx * ex + kdx * edx);
 
-	double yaw_rad = (yaw-offset_yaw) * M_PI/180;
+	double yaw_rad = (yaw+offset_yaw) * M_PI/180;
 	uav_pitch = saturate(-kx * cos(yaw_rad) + ky * sin(yaw_rad), 6);
 	return uav_pitch;
 }
@@ -225,16 +229,16 @@ float UavMonitor::calculate_roll(){
 	double ky = (kpy * ey + kdy * edy);
 	double kx = (kpx * ex + kdx * edx);
 
-	double yaw_rad = (yaw-offset_yaw) * M_PI/180;
+	double yaw_rad = (yaw+offset_yaw) * M_PI/180;
 	
 	uav_roll = saturate(-kx * sin(yaw_rad) + ky * cos(yaw_rad), 6);
 	return uav_roll;
 }
 
 float UavMonitor::calculate_yaw(){
-	double yaw_rad = (yaw-offset_yaw) * M_PI/180;
+	double yaw_rad = (yaw+offset_yaw) * M_PI/180;
 	uav_yaw = (float) yaw_rad;
-	return (float) yaw_rad;
+	return (float) yaw + offset_yaw;
 }
 
 float UavMonitor::saturate(double in, double minmax)
