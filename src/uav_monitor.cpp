@@ -46,7 +46,7 @@ void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr& msg){
 
 void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 
-	if (offset_yaw == 0.0){
+//	if (offset_yaw == 0.0){
 		//create quaternion
 		tf::Quaternion q(
 			msg->pose.orientation.x,
@@ -61,11 +61,11 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 		m.getRPY(off_r, off_p, off_y);
 		//get offset
 		offset_yaw =  - (float) off_y*180/M_PI - yaw;
-		std::cout << "Setting Offset ..." << std::endl;
-		std::cout << "\t Mocap yaw: " << off_y*180/M_PI << std::endl;
-		std::cout << "\t   Est yaw: " << yaw << std::endl;
-		std::cout << "\tOffset yaw: " << offset_yaw << std::endl;
-	}
+//		std::cout << "Setting Offset ..." << std::endl;
+//		std::cout << "\t Mocap yaw: " << off_y*180/M_PI << std::endl;
+//		std::cout << "\t   Est yaw: " << yaw << std::endl;
+//		std::cout << "\tOffset yaw: " << offset_yaw << std::endl;
+//	}
 
     float last_x = x;
     float last_y = y;
