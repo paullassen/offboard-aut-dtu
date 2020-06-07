@@ -61,8 +61,8 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 		m.getRPY(off_r, off_p, off_y);
 		//get offset
 		offset_yaw =  - (float) off_y*180/M_PI - yaw;
-		std::cout << "Setting Offset ..." << std::cout;
-		std::cout << "\t Mocap yaw: " << off_y*180/M_PI << std::cout;
+		std::cout << "Setting Offset ..." << std::endl;
+		std::cout << "\t Mocap yaw: " << off_y*180/M_PI << std::endl;
 		std::cout << "\t   Est yaw: " << yaw;
 		std::cout << "\tOffset yaw: " << offset_yaw;
 	}
