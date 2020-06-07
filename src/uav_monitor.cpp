@@ -63,8 +63,8 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 		offset_yaw =  - (float) off_y*180/M_PI - yaw;
 		std::cout << "Setting Offset ..." << std::endl;
 		std::cout << "\t Mocap yaw: " << off_y*180/M_PI << std::endl;
-		std::cout << "\t   Est yaw: " << yaw;
-		std::cout << "\tOffset yaw: " << offset_yaw;
+		std::cout << "\t   Est yaw: " << yaw << std::endl;
+		std::cout << "\tOffset yaw: " << offset_yaw << std::endl;
 	}
 
     float last_x = x;
@@ -238,7 +238,7 @@ float UavMonitor::calculate_roll(){
 float UavMonitor::calculate_yaw(){
 	double yaw_rad = (yaw+offset_yaw) * M_PI/180;
 	uav_yaw = (float) yaw_rad;
-	return (float) yaw + offset_yaw;
+	return (float) -offset_yaw;
 }
 
 float UavMonitor::saturate(double in, double minmax)
