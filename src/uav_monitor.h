@@ -26,7 +26,7 @@ using namespace mavsdk;
 class UavMonitor
 {
 	public:
-
+		uint64_t dur = 0;
         ros::Time last_time;
         float x = 0;
         float y = 0;
@@ -121,6 +121,24 @@ class UavMonitor
 		static void *offboard_control(void *arg);
 		static void *ros_run(void *args);
 
+};
+
+struct duration{
+	ros::Duration cusum;
+	ros::Duration last;
+	int count;
+};
+
+void addDuration(ros::Duration d, struct duration * s){
+	s->cusum += d;
+	s->last = d;
+	s->count++;
+};
+
+void printDuration(struct duration * s){
+	std::cout << "\nLoop duration:" << std::endl;
+	std::cout << "\t avg: " << s->cusum.toNSec() / (double) s->count << " nsec" << std::endl;
+	std::cout << "\tlast: " << s->last.toNSec() << " nsec" << std::endl;
 };
 
 

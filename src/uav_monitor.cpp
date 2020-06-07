@@ -147,7 +147,7 @@ void *UavMonitor::offboard_control(void *arg){
 	std::shared_ptr<mavsdk::Offboard> offboard = args->offboard;
 	std::shared_ptr<mavsdk::Action> action = args->action;
 	
-	ros::Rate rate(20);
+	ros::Rate rate(40);
 
 	Offboard::Attitude attitude;
 	attitude.roll_deg	= 0.0f;
@@ -159,15 +159,25 @@ void *UavMonitor::offboard_control(void *arg){
 	Offboard::Result offboard_result = offboard->start();
     offboard_error_exit(offboard_result, "Offboard start failed");
     offboard_log(offb_mode, "Offboard started");
+	
+	struct duration timeStruct;
+	timeStruct.cusum = ros::Duration(0);
+	timeStruct.count = 0;
 
 	while(!m->kill){
+		ros::Time start = ros::Time::now();
 		attitude.thrust_value =	m->calculate_thrust();			
 		attitude.roll_deg = m->calculate_roll();
 		attitude.pitch_deg = m->calculate_pitch();
 		attitude.yaw_deg = m->calculate_yaw();
 		offboard->set_attitude(attitude);
+		ros::Time end = ros::Time::now();
+		ros::Duration t = end-start;
+		addDuration(t, &timeStruct);
 		rate.sleep();
 	}
+
+	printDuration(&timeStruct);
 
 	std::cout << "Zeroing control inputs ..." << std::endl;
 	attitude.thrust_value = 0.0f;
@@ -176,7 +186,9 @@ void *UavMonitor::offboard_control(void *arg){
 	attitude.yaw_deg	= 0.0f;
 	offboard->set_attitude(attitude);
 
+
 /*
+//	This wasn't working and was crashing the program before killing the drone
 	offboard_result = offboard->stop();
     offboard_error_exit(offboard_result, "Offboard stop failed: ");
 	offboard_log(offb_mode, "Offboard stopped");
