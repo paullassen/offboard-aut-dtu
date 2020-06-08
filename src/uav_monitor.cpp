@@ -83,10 +83,11 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 			t_list[i] = ros::Time::now();
 		}
 	}
+	list_counter = ++list_counter % LIST_SIZE;
 
 	int prev = (list_counter + 1) % LIST_SIZE;
-	x_list[list_counter] =  msg->pose.position.x;
-	y_list[list_counter] = -msg->pose.position.y;
+	x_list[list_counter] = -msg->pose.position.x;
+	y_list[list_counter] =  msg->pose.position.y;
 	z_list[list_counter] =  msg->pose.position.z;
 	t_list[list_counter] =  msg->header.stamp;
 
@@ -97,7 +98,6 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 	dy = (y_list[list_counter] - y_list[prev])/dt.toSec();
 	dz = (z_list[list_counter] - z_list[prev])/dt.toSec();
 
-	list_counter = ++list_counter % LIST_SIZE;
 /*
     float last_x = x;
     float last_y = y;
@@ -255,8 +255,8 @@ float UavMonitor::calculate_thrust(){
 }
 
 float UavMonitor::calculate_pitch(){
-	double ky = (kpy * ey + kdy * edy);
-	double kx = (kpx * ex + kdx * edx);
+	double ky = (kpy * ey + kdy * edy + kiy * eiy);
+	double kx = (kpx * ex + kdx * edx + kix * eix);
 
 	double yaw_rad = (-mocap_yaw) * M_PI/180;
 	// 2 degree offset (from data analysis)
@@ -265,8 +265,8 @@ float UavMonitor::calculate_pitch(){
 }
 
 float UavMonitor::calculate_roll(){
-	double ky = (kpy * ey + kdy * edy);
-	double kx = (kpx * ex + kdx * edx);
+	double ky = (kpy * ey + kdy * edy + kiy * eiy);
+	double kx = (kpx * ex + kdx * edx + kix * eix);
 
 	double yaw_rad = (-mocap_yaw) * M_PI/180;
 	
