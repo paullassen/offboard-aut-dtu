@@ -77,6 +77,12 @@ class Status:
         
         self.thrust = 0.0 
 
+        self.kp.x = 8.0
+        self.kp.y = 8.0
+        self.kd.x = 6.0
+        self.kd.y = 6.0
+        self.bl.data = 0.1
+
         self.kp_pub = rospy.Publisher('test/kp', geo.Point, queue_size=1)
         self.kd_pub = rospy.Publisher('test/kd', geo.Point, queue_size=1)
         self.bl_pub = rospy.Publisher('test/baseline', smsg.Float32, queue_size=1)
