@@ -73,7 +73,7 @@ int main(int argc, char ** argv){
 									("test/att_in", 10);
 	ros::Publisher thrust_pub = nh.advertise<std_msgs::Float32>
 									("test/thrust", 10);
-	ros::Rate rate(20.0);
+	ros::Rate rate(50.0);
 
 	//Create ROS msgs
 	//std_msgs::Bool state;
@@ -94,7 +94,7 @@ int main(int argc, char ** argv){
 	}	
 
 	// Start Attitude Subscriber
-	set_rate_result = telemetry->set_rate_attitude(20.0);
+	set_rate_result = telemetry->set_rate_attitude(100.0);
 	if (set_rate_result != Telemetry::Result::Success) {
 	    std::cout << "Setting rate failed:" << set_rate_result<< std::endl;
 	}	

@@ -151,7 +151,7 @@ void *UavMonitor::offboard_control(void *arg){
 	std::shared_ptr<mavsdk::Offboard> offboard = args->offboard;
 	std::shared_ptr<mavsdk::Action> action = args->action;
 	
-	ros::Rate rate(40);
+	ros::Rate rate(100);
 
 	Offboard::Attitude attitude;
 	attitude.roll_deg	= 0.0f;
@@ -236,9 +236,9 @@ float UavMonitor::calculate_roll(){
 }
 
 float UavMonitor::calculate_yaw(){
-	double yaw_rad = (yaw+offset_yaw) * M_PI/180;
-	uav_yaw = (float) yaw_rad;
-	return (float) -offset_yaw;
+	//double yaw_rad = (yaw+offset_yaw) * M_PI/180;
+	uav_yaw = (float) -offset_yaw;
+	return (float) uav_yaw;
 }
 
 float UavMonitor::saturate(double in, double minmax)
