@@ -165,9 +165,9 @@ int main(int argc, char ** argv){
 		erd.point.z = uav.edz;
 		erd.header = header;
 
-		eri.point.x = uav.edx;
-		eri.point.y = uav.edy;
-		eri.point.z = uav.edz;
+		eri.point.x = uav.eix;
+		eri.point.y = uav.eiy;
+		eri.point.z = uav.eiz;
 		eri.header = header;
 
 		in.point.x = uav.uav_roll;
@@ -182,6 +182,7 @@ int main(int argc, char ** argv){
 		health_pub.publish(health);
 		err_pub.publish(err);
 		erd_pub.publish(erd);
+		eri_pub.publish(eri);
 		in_pub.publish(in);
 		thrust_pub.publish(thrust);
 		ros::Time end = ros::Time::now();

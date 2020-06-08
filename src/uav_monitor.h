@@ -135,7 +135,7 @@ struct duration{
 void initDuration(struct duration * s){
 	s->cusum = ros::Duration(0);
 	s->max = ros::Duration(0);
-	s->min = ros::Duration(0);
+	s->min = ros::Duration(1);
 	s->last = ros::Duration(0);
 	s->count = 0;
 };

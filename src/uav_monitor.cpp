@@ -53,6 +53,7 @@ void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr& msg){
 void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 
 	//create quaternion
+	if (offset_yaw == 0.0){
 	tf::Quaternion q(msg->pose.orientation.x,
 					 msg->pose.orientation.y,
 					 msg->pose.orientation.z,
@@ -65,7 +66,7 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 	m.getRPY(off_r, off_p, off_y);
 	//get offset
 	offset_yaw =  - (float) off_y*180/M_PI - yaw;
-
+}
 /*
 	std::cout << "Setting Offset ..." << std::endl;
 	std::cout << "\t Mocap yaw: " << off_y*180/M_PI << std::endl;
@@ -217,7 +218,7 @@ float UavMonitor::calculate_thrust(){
 	double scale = cos((double) roll * M_PI/180)*cos((double) pitch * M_PI/180);
 
 	uav_thrust = thrust; // / scale;
-	return saturate_minmax(uav_thrust, 0, 0.30);
+	return saturate_minmax(uav_thrust, 0, 0.50);
 }
 
 float UavMonitor::calculate_pitch(){
