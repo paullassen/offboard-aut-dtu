@@ -52,26 +52,26 @@ void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr& msg){
 
 void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 
-//	if (offset_yaw == 0.0){
-		//create quaternion
-		tf::Quaternion q(
-			msg->pose.orientation.x,
-			msg->pose.orientation.y,
-			msg->pose.orientation.z,
-			msg->pose.orientation.w
-			);
-		//get rotation matrix
-		tf::Matrix3x3 m(q);
-		double off_r, off_p, off_y;
-		//get r,p,y
-		m.getRPY(off_r, off_p, off_y);
-		//get offset
-		offset_yaw =  - (float) off_y*180/M_PI - yaw;
-//		std::cout << "Setting Offset ..." << std::endl;
-//		std::cout << "\t Mocap yaw: " << off_y*180/M_PI << std::endl;
-//		std::cout << "\t   Est yaw: " << yaw << std::endl;
-//		std::cout << "\tOffset yaw: " << offset_yaw << std::endl;
-//	}
+	//create quaternion
+	tf::Quaternion q(msg->pose.orientation.x,
+					 msg->pose.orientation.y,
+					 msg->pose.orientation.z,
+					 msg->pose.orientation.w);
+
+	//get rotation matrix
+	tf::Matrix3x3 m(q);
+	double off_r, off_p, off_y;
+	//get r,p,y
+	m.getRPY(off_r, off_p, off_y);
+	//get offset
+	offset_yaw =  - (float) off_y*180/M_PI - yaw;
+
+/*
+	std::cout << "Setting Offset ..." << std::endl;
+	std::cout << "\t Mocap yaw: " << off_y*180/M_PI << std::endl;
+	std::cout << "\t   Est yaw: " << yaw << std::endl;
+	std::cout << "\tOffset yaw: " << offset_yaw << std::endl;
+*/
 
     float last_x = x;
     float last_y = y;
@@ -171,9 +171,7 @@ void *UavMonitor::offboard_control(void *arg){
     offboard_log(offb_mode, "Offboard started");
 	
 	struct duration timeStruct;
-	timeStruct.cusum = ros::Duration(0);
-	timeStruct.count = 0;
-
+	initDuration(&timeStruct);
 	while(!m->kill){
 		ros::Time start = ros::Time::now();
 		attitude.thrust_value =	m->calculate_thrust();			
@@ -187,7 +185,7 @@ void *UavMonitor::offboard_control(void *arg){
 		rate.sleep();
 	}
 
-	printDuration(&timeStruct);
+	printDuration("Control", &timeStruct);
 
 	std::cout << "Zeroing control inputs ..." << std::endl;
 	attitude.thrust_value = 0.0f;
@@ -273,9 +271,9 @@ void UavMonitor::calculate_error(){
     edy = -dy;
     edz = -dz;
 
-	eix += ex;
-	eiy += ey;
-	eiz += ez;
+	eix += ex/100;
+	eiy += ey/100;
+	eiz += ez/100;
 }
 
 void *UavMonitor::ros_run(void * arg){

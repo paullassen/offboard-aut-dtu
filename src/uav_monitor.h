@@ -127,19 +127,41 @@ class UavMonitor
 struct duration{
 	ros::Duration cusum;
 	ros::Duration last;
+	ros::Duration max;
+	ros::Duration min;
 	int count;
 };
 
-void addDuration(ros::Duration d, struct duration * s){
-	s->cusum += d;
-	s->last = d;
-	s->count++;
+void initDuration(struct duration * s){
+	s->cusum = ros::Duration(0);
+	s->max = ros::Duration(0);
+	s->min = ros::Duration(0);
+	s->last = ros::Duration(0);
+	s->count = 0;
 };
 
-void printDuration(struct duration * s){
-	std::cout << "\nLoop duration:" << std::endl;
+void addDuration(ros::Duration d, struct duration * s){
+	s->count++;
+
+	s->cusum += d;
+	s->last = d;
+
+	if (d > s->max){
+		s->max = d;
+	}
+
+	if (d < s->min){
+		s->min = d;
+	}
+};
+
+void printDuration(const std::string& title, struct duration * s){
+	std::cout << "\n" << title << " Loop duration:" << std::endl;
 	std::cout << "\t avg: " << s->cusum.toNSec() / (double) s->count << " nsec" << std::endl;
 	std::cout << "\tlast: " << s->last.toNSec() << " nsec" << std::endl;
+	std::cout << "\t max: " << s->max.toNSec()  << " nsec" << std::endl;
+	std::cout << "\t min: " << s->min.toNSec()  << " nsec" << std::endl;
+
 };
 
 

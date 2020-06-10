@@ -63,15 +63,17 @@ class Status:
         self.health = test.Health()
         self.kp = geo.Point()
         self.kd = geo.Point()
+        self.ki = geo.Point()
         self.zz = geo.Point()
 
         self.bl = smsg.Float32()
-        self.ki = smsg.Bool()
+        self.kl = smsg.Bool()
 
         self.pos = geo.Point()
         self.vel = geo.Point()
         self.err = geo.Point()
         self.erd = geo.Point()
+        self.eri = geo.Point()
 
         self.attitude = geo.Point()
         
@@ -85,9 +87,10 @@ class Status:
 
         self.kp_pub = rospy.Publisher('test/kp', geo.Point, queue_size=1)
         self.kd_pub = rospy.Publisher('test/kd', geo.Point, queue_size=1)
+        self.ki_pub = rospy.Publisher('test/ki', geo.Point, queue_size=1)
         self.bl_pub = rospy.Publisher('test/baseline', smsg.Float32, queue_size=1)
         self.zz_pub = rospy.Publisher('test/target', geo.Point, queue_size=1)
-        self.ki_pub = rospy.Publisher('test/kill', smsg.Bool, queue_size=1)
+        self.kl_pub = rospy.Publisher('test/kill', smsg.Bool, queue_size=1)
 
     def healthCb(self, msg):
         self.health = msg
@@ -110,9 +113,10 @@ class Status:
     def publish(self):
         self.kp_pub.publish(self.kp)
         self.kd_pub.publish(self.kd)
+        self.ki_pub.publish(self.ki)
         self.bl_pub.publish(self.bl)
         self.zz_pub.publish(self.zz)
-        self.ki_pub.publish(self.ki)
+        self.kl_pub.publish(self.kl)
 
 
     def print_status(self, first=False):
@@ -129,6 +133,9 @@ class Status:
         kdx = round(self.kd.x,5)
         kdy = round(self.kd.y,5)
         kdz = round(self.kd.z,5)
+        kix = round(self.ki.x,5)
+        kiy = round(self.ki.y,5)
+        kiz = round(self.ki.z,5)
         bl  = round(self.bl.data, 5)
 
 
@@ -144,6 +151,10 @@ class Status:
         exd = round(self.erd.x, 5)
         eyd = round(self.erd.y, 5)
         ezd = round(self.erd.z, 5)
+        exi = round(self.eri.x, 5)
+        eyi = round(self.eri.y, 5)
+        ezi = round(self.eri.z, 5)
+        
         t = round(self.thrust, 5)
 
         pr = round(self.attitude.x, 5)
@@ -158,43 +169,43 @@ class Status:
         print((" Mag   : "+printBool(health.mag)).ljust(15) + (" Home     : "+printBool(health.home)).ljust(20))
         print((" Level : "+printBool(health.level)).ljust(15) + (" Battery  : "+str(round(health.battery,5)).ljust(20)))
         print("------------------------------------------------------------")
-        print("Current_Ang".ljust(15)+"Target_Ang".ljust(15)+"Errors".ljust(15)+"Gains".ljust(10))
+        print("Current_Ang".ljust(15)+"Target_Ang".ljust(15)+"Errors".ljust(15)+"Gains".ljust(10)+'   ')
         print("------------------------------------------------------------")
         print((' r: '+str(pr)).ljust(15) + (' x: '+str(zzx)).ljust(15) + 
-              (' er: '+str(ex)).ljust(15) + (' kpx: '+str(kpx)).ljust(10))
+              (' ex: '+str(ex)).ljust(15) + (' kpx: '+str(kpx)).ljust(10)+'   ')
                
         print((' p: '+str(pp)).ljust(15) + (' y: '+str(zzy)).ljust(15) + 
-              (' ep: '+str(ey)).ljust(15) + (' kpy: '+str(kpy)).ljust(10))
+              (' ey: '+str(ey)).ljust(15) + (' kpy: '+str(kpy)).ljust(10)+'   ')
 
         print((' y: '+str(pw)).ljust(15) + (' z: '+str(zzz)).ljust(15) + 
-              (' ey: '+str(ez)).ljust(15) + (' kpz: '+str(kpz)).ljust(10))
+              (' ez: '+str(ez)).ljust(15) + (' kpz: '+str(kpz)).ljust(10)+'   ')
         
         print("------------------------------------------------------------")
-        print("Current_Pos".ljust(15)+"Target_Pos".ljust(15)+"Errors".ljust(15)+"Gains".ljust(10))
+        print("Current_Pos".ljust(15)+"Target_Pos".ljust(15)+"Errors".ljust(15)+"Gains".ljust(10)+'   ')
         print("------------------------------------------------------------")
         print((' x: '+str(px)).ljust(15) + (' x: '+str(zzx)).ljust(15) + 
-              (' ex: '+str(ex)).ljust(15) + (' kpx: '+str(kpx)).ljust(10))
+              (' exd: '+str(exd)).ljust(15) + (' kdx: '+str(kdx)).ljust(10)+'   ')
                
         print((' y: '+str(py)).ljust(15) + (' y: '+str(zzy)).ljust(15) + 
-              (' ey: '+str(ey)).ljust(15) + (' kpy: '+str(kpy)).ljust(10))
+              (' eyd: '+str(eyd)).ljust(15) + (' kdy: '+str(kdy)).ljust(10)+'   ')
 
         print((' z: '+str(pz)).ljust(15) + (' z: '+str(zzz)).ljust(15) + 
-              (' ez: '+str(ez)).ljust(15) + (' kpz: '+str(kpz)).ljust(10))
+              (' ezd: '+str(ezd)).ljust(15) + (' kdz: '+str(kdz)).ljust(10)+'   ')
         
         print("------------------------------------------------------------")
-        print("Current_Vel".ljust(15)+("Thrust : "+str(t)).ljust(30)+"Kill:"+str(self.ki.data).rjust(6))
+        print("Current_Vel".ljust(15)+("Thrust : "+str(t)).ljust(30)+"Kill:"+str(self.kl.data).rjust(6))
         print("------------------------------------------------------------")
         print((' x: '+str(vx)).ljust(15) + (' T: '+str(t)).ljust(15) + 
-              ('exd: '+str(exd)).ljust(15) + (' kdx: '+str(kdx)).ljust(10))
+              ('exi: '+str(exi)).ljust(15) + (' kix: '+str(kix)).ljust(10)+'   ')
         
         print((' y: '+str(vy)).ljust(15) + ('Baseline').ljust(15) + 
-              ('eyd: '+str(eyd)).ljust(15) + (' kdy: '+str(kdy)).ljust(10))
+              ('eyi: '+str(eyi)).ljust(15) + (' kiy: '+str(kiy)).ljust(10)+'   ')
 
         print((' z: '+str(vz)).ljust(15) + (' T: '+str(bl)).ljust(15) + 
-              ('ezd: '+str(ezd)).ljust(15) + (' kdz: '+str(kdz)).ljust(10))
+              ('ezi: '+str(ezi)).ljust(15) + (' kiz: '+str(kiz)).ljust(10)+'   ')
 
     def kill(self):
-        self.ki.data = True
+        self.kl.data = True
         self.bl.data = 0.0
     def incKpz(self):
         self.kp.z += 0.01 
@@ -224,6 +235,11 @@ class Status:
         self.kd.x -= 0.1
         self.kd.y -= 0.1
 
+    def incKiz(self):
+        self.ki.z += 0.01/100
+
+    def decKiz(self):
+        self.ki.z -= 0.01/100
     def incBl(self):
         self.bl.data += 0.01
 
@@ -253,6 +269,7 @@ def main():
     rospy.Subscriber('test/vel', geo.PointStamped, stat.velCb)
     rospy.Subscriber('test/err', geo.PointStamped, stat.errCb)
     rospy.Subscriber('test/erd', geo.PointStamped, stat.erdCb)
+    rospy.Subscriber('test/eri', geo.PointStamped, stat.eriCb)
 
     intro()
     stat.print_status(True)
@@ -292,6 +309,11 @@ def main():
                     stat.incKdz()
                 elif chr(k) == 'l':
                     stat.decKdz()
+                elif chr(k) == 'n':
+                    stat.incKiz()
+                elif chr(k) == 'm':
+                    stat.decKiz()
+
         stat.publish()
         rate.sleep()
 
