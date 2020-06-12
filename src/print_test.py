@@ -110,6 +110,12 @@ class Status:
     def erdCb(self, msg):
         self.erd = msg.point
 
+    def eriCb(self, msg):
+        self.eri = msg.point
+
+    def thrustCb(self, msg):
+        self.thrust = msg.data
+
     def publish(self):
         self.kp_pub.publish(self.kp)
         self.kd_pub.publish(self.kd)
@@ -236,10 +242,19 @@ class Status:
         self.kd.y -= 0.1
 
     def incKiz(self):
-        self.ki.z += 0.01/100
+        self.ki.z += 0.01
 
     def decKiz(self):
-        self.ki.z -= 0.01/100
+        self.ki.z -= 0.01
+
+    def incKixy(self):
+        self.ki.x += 0.01
+        self.ki.y += 0.01
+
+    def decKixy(self):
+        self.ki.x -= 0.01
+        self.ki.y -= 0.01
+
     def incBl(self):
         self.bl.data += 0.01
 
@@ -247,10 +262,10 @@ class Status:
         self.bl.data -= 0.01
     
     def incZz(self):
-        self.zz.z += 0.01
+        self.zz.z += 0.25
     
     def decZz(self):
-        self.zz.z -= 0.01
+        self.zz.z -= 0.25
 
 
 def main():
@@ -270,6 +285,7 @@ def main():
     rospy.Subscriber('test/err', geo.PointStamped, stat.errCb)
     rospy.Subscriber('test/erd', geo.PointStamped, stat.erdCb)
     rospy.Subscriber('test/eri', geo.PointStamped, stat.eriCb)
+    rospy.Subscriber('test/thrust', smsg.Float32, stat.thrustCb)
 
     intro()
     stat.print_status(True)
@@ -313,6 +329,10 @@ def main():
                     stat.incKiz()
                 elif chr(k) == 'm':
                     stat.decKiz()
+                elif chr(k) == 'v':
+                    stat.incKixy()
+                elif chr(k) == 'b':
+                    stat.decKixy()
 
         stat.publish()
         rate.sleep()
