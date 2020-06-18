@@ -29,7 +29,7 @@ class UavMonitor
 {
 	public:
 		uint64_t dur = 0;
-        ros::Time last_time;
+        ros::Time last_time = ros::Time::now();
         
 		int list_counter = 0;
 		float x_list[LIST_SIZE] = {};
@@ -75,6 +75,10 @@ class UavMonitor
 
 		float baseline = 0.1;
 		
+		double mocap_roll = 0.0;
+		double mocap_pitch = 0.0;
+		double mocap_yaw = 0.0;
+
 		float uav_thrust = 0;
 		float uav_pitch = 0;
 		float uav_roll = 0;

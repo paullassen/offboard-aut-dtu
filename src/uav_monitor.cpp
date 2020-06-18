@@ -54,19 +54,20 @@ void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr& msg){
 void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 
 	//create quaternion
-	if (offset_yaw == 0.0){
 	tf::Quaternion q(msg->pose.orientation.x,
 					 msg->pose.orientation.y,
 					 msg->pose.orientation.z,
 					 msg->pose.orientation.w);
 
-		//get rotation matrix
-		tf::Matrix3x3 m(q);
-		double off_r, off_p, off_y;
-		//get r,p,y
-		m.getRPY(off_r, off_p, off_y);
+	//get rotation matrix
+	tf::Matrix3x3 m(q);
+	//get r,p,y
+	m.getRPY(mocap_roll, mocap_pitch, mocap_yaw);
+
+	if ((ros::Time::now() - last_time) > ros::Duration(1.0)){
 		//get offset
-		offset_yaw =  - (float) off_y*180/M_PI - yaw;
+		offset_yaw =  - (float) mocap_yaw*180/M_PI - yaw;
+		last_time = ros::Time::now();
 	}
 /*
 	std::cout << "Setting Offset ..." << std::endl;
@@ -76,23 +77,25 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 */
 
 
+	//Fill the list if it is not yet initialized
 	if (x_list[0] == 0.0 && list_counter == 0){
 		for(int i = 0; i < LIST_SIZE; i++){
 			t_list[i] = ros::Time::now();
 		}
 	}
 
+	int prev = (list_counter + 1) % LIST_SIZE;
 	x_list[list_counter] =  msg->pose.position.x;
 	y_list[list_counter] = -msg->pose.position.y;
 	z_list[list_counter] =  msg->pose.position.z;
 	t_list[list_counter] =  msg->header.stamp;
 
 	ros::Duration dt = 
-			t_list[list_counter] - t_list[(list_counter + 1) % LIST_SIZE];
+			t_list[list_counter] - t_list[prev];
 
-	dx = (x_list[list_counter] - x_list[(list_counter + 1) % LIST_SIZE])/dt.toSec();
-	dy = (y_list[list_counter] - y_list[(list_counter + 1) % LIST_SIZE])/dt.toSec();
-	dz = (z_list[list_counter] - z_list[(list_counter + 1) % LIST_SIZE])/dt.toSec();
+	dx = (x_list[list_counter] - x_list[prev])/dt.toSec();
+	dy = (y_list[list_counter] - y_list[prev])/dt.toSec();
+	dz = (z_list[list_counter] - z_list[prev])/dt.toSec();
 
 	list_counter = ++list_counter % LIST_SIZE;
 /*
@@ -255,7 +258,7 @@ float UavMonitor::calculate_pitch(){
 	double ky = (kpy * ey + kdy * edy);
 	double kx = (kpx * ex + kdx * edx);
 
-	double yaw_rad = (yaw+offset_yaw) * M_PI/180;
+	double yaw_rad = (-mocap_yaw) * M_PI/180;
 	// 2 degree offset (from data analysis)
 	uav_pitch = -2 + saturate(-kx * cos(yaw_rad) + ky * sin(yaw_rad), 6);
 	return uav_pitch;
@@ -265,7 +268,7 @@ float UavMonitor::calculate_roll(){
 	double ky = (kpy * ey + kdy * edy);
 	double kx = (kpx * ex + kdx * edx);
 
-	double yaw_rad = (yaw+offset_yaw) * M_PI/180;
+	double yaw_rad = (-mocap_yaw) * M_PI/180;
 	
 	uav_roll =  saturate(-kx * sin(yaw_rad) + ky * cos(yaw_rad), 6);
 	return uav_roll;
@@ -294,9 +297,9 @@ float UavMonitor::saturate_minmax(double in, double min, double max)
 }
 
 void UavMonitor::calculate_error(){
-    ex = tx - x;
-    ey = ty - y;
-    ez = tz - z;
+    ex = tx - x_list[list_counter];
+    ey = ty - y_list[list_counter];
+    ez = tz - z_list[list_counter];
 
     edx = -dx;
     edy = -dy;
