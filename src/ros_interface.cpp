@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <offboard/Health.h>
+#include <offboard/ActuatorArray.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Header.h>
@@ -54,7 +55,7 @@ int main(int argc, char ** argv){
 	auto info	= std::make_shared<Info>(system);
 	auto offboard	= std::make_shared<Offboard>(system);
 	auto telemetry	= std::make_shared<Telemetry>(system);
-
+	
 	/* start ROS */	
 	ros::init(argc, argv, "interface");
 	ros::NodeHandle nh;
@@ -74,6 +75,10 @@ int main(int argc, char ** argv){
 									("test/att_in", 10);
 	ros::Publisher thrust_pub = nh.advertise<std_msgs::Float32>
 									("test/thrust", 10);
+	ros::Publisher actuator_target_pub = nh.advertise<offboard::ActuatorArray>
+									("test/actuator_target", 10);
+	ros::Publisher actuator_status_pub = nh.advertise<offboard::ActuatorArray>
+									("test/actuator_status", 10);
 	ros::Rate rate(50.0);
 
 	/* Create UavMonitor to handle controllers */
@@ -90,7 +95,18 @@ int main(int argc, char ** argv){
 	if (set_rate_result != Telemetry::Result::Success) {
 	    std::cout << "Setting rate failed:" << set_rate_result<< std::endl;
 	}	
+	
+	/* Start Attitude Subscriber */
+	set_rate_result = telemetry->set_rate_actuator_control_target(100);
+	if (set_rate_result != Telemetry::Result::Success) {
+	    std::cout << "Setting rate failed:" << set_rate_result<< std::endl;
+	}	
 
+	/* Start Attitude Subscriber */
+	set_rate_result = telemetry->set_rate_actuator_output_status(100); 
+	if (set_rate_result != Telemetry::Result::Success) {
+	    std::cout << "Setting rate failed:" << set_rate_result<< std::endl;
+	}	
 
 	telemetry->subscribe_health([&uav](Telemetry::Health health){
 		uav.set_health(health);
@@ -102,6 +118,14 @@ int main(int argc, char ** argv){
 
 	telemetry->subscribe_attitude_euler([&uav](Telemetry::EulerAngle angle){
 		uav.set_angle(angle);		
+	});
+
+	telemetry->subscribe_actuator_control_target([&uav](Telemetry::ActuatorControlTarget act){
+		uav.set_actuator_target(act);
+	});
+
+	telemetry->subscribe_actuator_output_status([&uav](Telemetry::ActuatorOutputStatus aos){
+		uav.set_actuator_status(aos);
 	});
 
 	/* struct to pass objects to threads */
@@ -133,12 +157,16 @@ int main(int argc, char ** argv){
 	//std_msgs::Bool state;
 	//std_msgs::Float32 volt;
 	offboard::Health health;
+	offboard::ActuatorArray actuator_targets;
+	offboard::ActuatorArray actuator_status;
 	geometry_msgs::PointStamped attitude;
 	geometry_msgs::PointStamped err;
 	geometry_msgs::PointStamped erd;
 	geometry_msgs::PointStamped eri;
 	geometry_msgs::PointStamped in;
+	
 	std_msgs::Float32 thrust;
+	
 	std_msgs::Header header;
 	header.stamp = ros::Time::now();
 	
@@ -176,7 +204,9 @@ int main(int argc, char ** argv){
 		in.header = header;
 
 		thrust.data = uav.uav_thrust;
-
+		
+		actuator_targets.actuator = uav.actuator_target;
+		actuator_status.actuator = uav.actuator_status;
 
 		att_pub.publish(attitude);
 		health_pub.publish(health);
@@ -185,6 +215,8 @@ int main(int argc, char ** argv){
 		eri_pub.publish(eri);
 		in_pub.publish(in);
 		thrust_pub.publish(thrust);
+		actuator_target_pub.publish(actuator_targets);
+		actuator_status_pub.publish(actuator_status);
 		ros::Time end = ros::Time::now();
 		addDuration(end - start, &timeStruct);
 		rate.sleep();

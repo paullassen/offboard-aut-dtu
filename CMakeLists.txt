@@ -64,6 +64,7 @@ include_directories(${CURSES_INCLUDE_DIR})
 add_message_files(
   FILES
   Health.msg
+  ActuatorArray.msg
 )
 
 ## Generate services in the 'srv' folder

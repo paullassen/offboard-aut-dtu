@@ -10,6 +10,7 @@
 #include <future>
 #include <iostream>
 #include <thread>
+#include <queue>
 
 #include <pthread.h>
 #include <ncurses.h>
@@ -59,14 +60,14 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 					 msg->pose.orientation.z,
 					 msg->pose.orientation.w);
 
-	//get rotation matrix
-	tf::Matrix3x3 m(q);
-	double off_r, off_p, off_y;
-	//get r,p,y
-	m.getRPY(off_r, off_p, off_y);
-	//get offset
-	offset_yaw =  - (float) off_y*180/M_PI - yaw;
-}
+		//get rotation matrix
+		tf::Matrix3x3 m(q);
+		double off_r, off_p, off_y;
+		//get r,p,y
+		m.getRPY(off_r, off_p, off_y);
+		//get offset
+		offset_yaw =  - (float) off_y*180/M_PI - yaw;
+	}
 /*
 	std::cout << "Setting Offset ..." << std::endl;
 	std::cout << "\t Mocap yaw: " << off_y*180/M_PI << std::endl;
@@ -74,6 +75,27 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 	std::cout << "\tOffset yaw: " << offset_yaw << std::endl;
 */
 
+
+	if (x_list[0] == 0.0 && list_counter == 0){
+		for(int i = 0; i < LIST_SIZE; i++){
+			t_list[i] = ros::Time::now();
+		}
+	}
+
+	x_list[list_counter] =  msg->pose.position.x;
+	y_list[list_counter] = -msg->pose.position.y;
+	z_list[list_counter] =  msg->pose.position.z;
+	t_list[list_counter] =  msg->header.stamp;
+
+	ros::Duration dt = 
+			t_list[list_counter] - t_list[(list_counter + 1) % LIST_SIZE];
+
+	dx = (x_list[list_counter] - x_list[(list_counter + 1) % LIST_SIZE])/dt.toSec();
+	dy = (y_list[list_counter] - y_list[(list_counter + 1) % LIST_SIZE])/dt.toSec();
+	dz = (z_list[list_counter] - z_list[(list_counter + 1) % LIST_SIZE])/dt.toSec();
+
+	list_counter = ++list_counter % LIST_SIZE;
+/*
     float last_x = x;
     float last_y = y;
     float last_z = z;
@@ -90,7 +112,7 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
     dz = (z-last_z)/dt.toSec();
     
     last_time = msg->header.stamp;
-
+*/
     calculate_error();
 }
 
@@ -144,6 +166,14 @@ void UavMonitor::set_angle(Telemetry::EulerAngle angle){
 	roll = angle.roll_deg;
 	pitch = angle.pitch_deg;
 	yaw = angle.yaw_deg;
+}
+
+void UavMonitor::set_actuator_target(Telemetry::ActuatorControlTarget act){
+	actuator_target = act.controls;
+}
+
+void UavMonitor::set_actuator_status(Telemetry::ActuatorOutputStatus aos){
+	actuator_status = aos.actuator;
 }
 
 //Other Functions

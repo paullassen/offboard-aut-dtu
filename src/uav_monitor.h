@@ -12,6 +12,8 @@
 #include <iostream>
 #include <thread>
 
+#include <queue>
+
 #include <mavsdk/mavsdk.h>
 #include <mavsdk/plugins/action/action.h>
 #include <mavsdk/plugins/offboard/offboard.h>
@@ -20,7 +22,7 @@
 #include "mavsdk_helper.h"
 
 
-
+#define LIST_SIZE 10
 
 using namespace mavsdk;
 class UavMonitor
@@ -28,7 +30,14 @@ class UavMonitor
 	public:
 		uint64_t dur = 0;
         ros::Time last_time;
-        float x = 0;
+        
+		int list_counter = 0;
+		float x_list[LIST_SIZE] = {};
+		float y_list[LIST_SIZE] = {};
+		float z_list[LIST_SIZE] = {};
+		ros::Time t_list[LIST_SIZE] = {};
+
+		float x = 0;
         float y = 0;
         float z = 0;
 
@@ -81,10 +90,15 @@ class UavMonitor
 		float yaw = 0;	
 	
 		float offset_yaw = 0.0;
+		std::vector<float> actuator_target;
+		std::vector<float> actuator_status;
+
 		// Set Functions
 		void set_health(Telemetry::Health);
 		void set_battery(Telemetry::Battery);
 		void set_angle(Telemetry::EulerAngle);
+		void set_actuator_target(Telemetry::ActuatorControlTarget);
+		void set_actuator_status(Telemetry::ActuatorOutputStatus);
 
 		float calculate_thrust();
 		float calculate_roll();
@@ -124,6 +138,8 @@ class UavMonitor
 
 };
 
+
+/* Struct and Functions for getting timing data */
 struct duration{
 	ros::Duration cusum;
 	ros::Duration last;
@@ -165,6 +181,7 @@ void printDuration(const std::string& title, struct duration * s){
 };
 
 
+/* Struct for passing arguments between main function and threads */
 struct thread_data{
 	UavMonitor * uav;
 	ros::NodeHandle * nh;

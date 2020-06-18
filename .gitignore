@@ -1,2 +1,3 @@
 #ignore src/mvr/*
 **/src/mvr
+.clang_complete
