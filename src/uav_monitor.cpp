@@ -64,7 +64,7 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 	//get r,p,y
 	m.getRPY(mocap_roll, mocap_pitch, mocap_yaw);
 
-	if ((ros::Time::now() - last_time) > ros::Duration(1.0)){
+	if ((ros::Time::now() - last_time) > ros::Duration(0.5)){
 		//get offset
 		offset_yaw =  - (float) mocap_yaw*180/M_PI - yaw;
 		last_time = ros::Time::now();
