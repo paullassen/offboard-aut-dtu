@@ -65,6 +65,8 @@ int main(int argc, char ** argv){
 									("test/health", 10);
 	ros::Publisher att_pub = nh.advertise<geometry_msgs::PointStamped>
 									("test/attitude", 10);
+	ros::Publisher matt_pub = nh.advertise<geometry_msgs::PointStamped>
+									("test/mocap_att", 10);
 	ros::Publisher err_pub = nh.advertise<geometry_msgs::PointStamped>
 									("test/err", 10);
 	ros::Publisher erd_pub = nh.advertise<geometry_msgs::PointStamped>
@@ -160,6 +162,7 @@ int main(int argc, char ** argv){
 	offboard::ActuatorArray actuator_targets;
 	offboard::ActuatorArray actuator_status;
 	geometry_msgs::PointStamped attitude;
+	geometry_msgs::PointStamped mocap_att;
 	geometry_msgs::PointStamped err;
 	geometry_msgs::PointStamped erd;
 	geometry_msgs::PointStamped eri;
@@ -182,6 +185,11 @@ int main(int argc, char ** argv){
 		attitude.point.y = uav.pitch;
 		attitude.point.z = uav.yaw;
 		attitude.header = header;
+
+		mocap_att.point.x = uav.mocap_roll;
+		mocap_att.point.y = uav.mocap_pitch;
+		mocap_att.point.z = uav.mocap_yaw;
+		mocap_att.header = header;
 
 		err.point.x = uav.ex;
 		err.point.y = uav.ey;
@@ -209,6 +217,7 @@ int main(int argc, char ** argv){
 		actuator_status.actuator = uav.actuator_status;
 
 		att_pub.publish(attitude);
+		matt_pub.publish(mocap_att);
 		health_pub.publish(health);
 		err_pub.publish(err);
 		erd_pub.publish(erd);
