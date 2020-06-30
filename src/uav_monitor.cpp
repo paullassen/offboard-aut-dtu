@@ -76,7 +76,7 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 	tf::Matrix3x3 m(q);
 	//get r,p,y
 	m.getRPY(mocap_roll, mocap_pitch, mocap_yaw);
-
+	mocap_roll += mocap_roll > 0 ? -M_PI:M_PI;
 	if ((ros::Time::now() - last_time) > ros::Duration(0.5)){
 		//get offset
 		offset_yaw = (float) mocap_yaw*180/M_PI - yaw;
@@ -96,7 +96,7 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 	x_list[list_counter] =	mocap.pose.position.x;
 	y_list[list_counter] =  mocap.pose.position.y;
 	z_list[list_counter] = -mocap.pose.position.z;
-	t_list[list_counter] =  mocap.header.stamp;
+	t_list[list_counter] =  msg->header.stamp;
 
 	ros::Duration dt = 
 			t_list[list_counter] - t_list[prev];
@@ -111,7 +111,7 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 void UavMonitor::baselineCb(const std_msgs::Float32::ConstPtr& msg)
 {
 	baseline = msg->data;
-	std::cerr << "BASELINE : " << baseline << "\r" <<std::flush;
+	//std::cerr << "BASELINE : " << baseline << "\r" <<std::flush;
 }
 
 void  UavMonitor::killCb(const std_msgs::Bool::ConstPtr& msg)
@@ -254,7 +254,7 @@ float UavMonitor::calculate_pitch(){
 
 	double yaw_rad = (mocap_yaw) * M_PI/180;
 	// 2 degree offset (from data analysis)
-	uav_pitch = saturate(-kx * cos(yaw_rad) + -ky * sin(yaw_rad), 6);
+	uav_pitch = -2+saturate(-kx * cos(yaw_rad) + -ky * sin(yaw_rad), 6);
 	return uav_pitch;
 }
 
@@ -299,7 +299,7 @@ void UavMonitor::calculate_error(){
     edy = -dy;
     edz = -dz;
 
-	if(!begin){
+	if(begin){
 		eix += ex/100;
 		eiy += ey/100;
 		eiz += ez/100;
