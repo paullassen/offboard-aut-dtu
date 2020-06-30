@@ -9,6 +9,8 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   tf
+  tf2
+  tf2_ros
   geometry_msgs
   mavros
   mavros_msgs
@@ -195,6 +197,11 @@ target_link_libraries(ros_interface
 
 	${Boost_LIBRARIES}
 )
+add_executable(test src/test.cpp)
+target_link_libraries(test
+	${catkin_LIBRARIES}
+	${Boost_LIBRARIES}
+	)
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide

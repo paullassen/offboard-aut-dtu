@@ -124,7 +124,7 @@ class UavMonitor
 		int ch = ' ';
 		bool done = false;
 		bool kill = false;
-		bool start = false;
+		bool begin = false;
 
 		// Callback Functions
 		void kpCb(const geometry_msgs::Point::ConstPtr& msg);

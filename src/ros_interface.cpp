@@ -145,11 +145,11 @@ int main(int argc, char ** argv){
 	pthread_t offboard_thread, callback_thread;
 	pthread_create(&callback_thread, NULL, &UavMonitor::ros_run, (void *)&thread_args);
 
-	/* arm drone */ 
+	/* arm drone *//* 
     Action::Result arm_result = action->arm();
 	action_error_exit(arm_result, "Arming failed");
     std::cout << "Armed" << std::endl;
-	
+	*/	
 	/* go into offboard control */
 	pthread_create(&offboard_thread, NULL, &UavMonitor::offboard_control, (void *)&thread_args);
 	

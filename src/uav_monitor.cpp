@@ -86,8 +86,8 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 	list_counter = ++list_counter % LIST_SIZE;
 
 	int prev = (list_counter + 1) % LIST_SIZE;
-	x_list[list_counter] = -msg->pose.position.x;
-	y_list[list_counter] =  msg->pose.position.y;
+	x_list[list_counter] =  msg->pose.position.x;
+	y_list[list_counter] = -msg->pose.position.y;
 	z_list[list_counter] =  msg->pose.position.z;
 	t_list[list_counter] =  msg->header.stamp;
 
@@ -132,7 +132,7 @@ void  UavMonitor::killCb(const std_msgs::Bool::ConstPtr& msg)
 
 void UavMonitor::startCb(const std_msgs::Bool::ConstPtr& msg)
 {
-	start = msg->data;
+	begin = msg->data;
 }
 
 //Health Functions
@@ -195,9 +195,14 @@ void *UavMonitor::offboard_control(void *arg){
 
 	Offboard::Attitude attitude;
 	attitude.roll_deg	= 0.0f;
-	attitude.pitch_deg	= -1.0f;
+	attitude.pitch_deg	= -0.0f;
 	attitude.yaw_deg		= 0.0f;
 	attitude.thrust_value = 0.1f;
+
+	while(!m->begin){}
+	Action::Result arm_result = action->arm();
+	action_error_exit(arm_result, "Arming failed");
+    std::cout << "Armed" << std::endl;
 
 	offboard->set_attitude(attitude);
 	Offboard::Result offboard_result = offboard->start();
