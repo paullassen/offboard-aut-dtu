@@ -76,7 +76,7 @@ class Status:
         self.eri = geo.Point()
 
         self.attitude = geo.Point()
-        
+        self.mocap_att = geo.Point()
         self.thrust = 0.0 
 
         self.kp.x = 8.0
@@ -104,6 +104,9 @@ class Status:
 
     def attCb(self, msg):
         self.attitude = msg.point
+
+    def mattCb(self, msg):
+        self.mocap_att = msg.point
 
     def posCb(self, msg):
         self.pos= msg.point
@@ -173,6 +176,11 @@ class Status:
         pr = round(self.attitude.x, 5)
         pp = round(self.attitude.y, 5)
         pw = round(self.attitude.z, 5)
+
+        mr = round(self.mocap_att.x, 5)
+        mp = round(self.mocap_att.y, 5)
+        my = round(self.mocap_att.z, 5)
+
         health = self.health;            
         print("------------------------------------------------------------")
         print("Health".ljust(55))
@@ -182,15 +190,15 @@ class Status:
         print((" Mag   : "+printBool(health.mag)).ljust(15) + (" Home     : "+printBool(health.home)).ljust(20))
         print((" Level : "+printBool(health.level)).ljust(15) + (" Battery  : "+str(round(health.battery,5)).ljust(20)))
         print("------------------------------------------------------------")
-        print("Current_Ang".ljust(15)+"Target_Ang".ljust(15)+"Errors".ljust(15)+"Gains".ljust(10)+'   ')
+        print("Uav_Ang".ljust(15)+"Mocap_Ang".ljust(15)+"Errors".ljust(15)+"Gains".ljust(10)+'   ')
         print("------------------------------------------------------------")
-        print((' r: '+str(pr)).ljust(15) + (' x: '+str(zzx)).ljust(15) + 
+        print((' r: '+str(pr)).ljust(15) + (' r: '+str(mr)).ljust(15) + 
               (' ex: '+str(ex)).ljust(15) + (' kpx: '+str(kpx)).ljust(10)+'   ')
                
-        print((' p: '+str(pp)).ljust(15) + (' y: '+str(zzy)).ljust(15) + 
+        print((' p: '+str(pp)).ljust(15) + (' p: '+str(mp)).ljust(15) + 
               (' ey: '+str(ey)).ljust(15) + (' kpy: '+str(kpy)).ljust(10)+'   ')
 
-        print((' y: '+str(pw)).ljust(15) + (' z: '+str(zzz)).ljust(15) + 
+        print((' y: '+str(pw)).ljust(15) + (' y: '+str(my)).ljust(15) + 
               (' ez: '+str(ez)).ljust(15) + (' kpz: '+str(kpz)).ljust(10)+'   ')
         
         print("------------------------------------------------------------")
@@ -298,6 +306,7 @@ def main():
 
     rospy.Subscriber('test/health', test.Health, stat.healthCb)
     rospy.Subscriber('test/attitude', geo.PointStamped, stat.attCb)
+    rospy.Subscriber('test/mocap_att', geo.PointStamped, stat.mattCb)
     rospy.Subscriber('test/pose', geo.PointStamped, stat.posCb)
     rospy.Subscriber('test/vel', geo.PointStamped, stat.velCb)
     rospy.Subscriber('test/err', geo.PointStamped, stat.errCb)
