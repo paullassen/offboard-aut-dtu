@@ -177,6 +177,11 @@ target_link_libraries(uav_monitor
 	)
 
 add_executable(ros_interface src/ros_interface.cpp)
+add_executable(mocap_to_quat src/mocap_to_quat.cpp)
+target_link_libraries(mocap_to_quat
+	${catkin_LIBRARIES}
+	${Boost_LIBRARIES}
+	)
 target_link_libraries(ros_interface 
 	${catkin_LIBRARIES}
     MAVSDK::mavsdk_telemetry

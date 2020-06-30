@@ -81,9 +81,16 @@ class Status:
 
         self.kp.x = 8.0
         self.kp.y = 8.0
+        self.kp.z = 0.05
+
         self.kd.x = 6.0
         self.kd.y = 6.0
-        self.bl.data = 0.1
+        self.kd.z = 0.03
+        
+        self.ki.x = 1.0
+        self.ki.y = 1.0
+        self.ki.z = 0.02
+        self.bl.data = 0.14
 
         self.kp_pub = rospy.Publisher('test/kp', geo.Point, queue_size=1)
         self.kd_pub = rospy.Publisher('test/kd', geo.Point, queue_size=1)
@@ -267,6 +274,17 @@ class Status:
     def decZz(self):
         self.zz.z -= 0.25
 
+    def incXx(self):
+        self.zz.x += 0.25
+
+    def decXx(self):
+        self.zz.x -= 0.25
+
+    def incYy(self):
+        self.zz.y += 0.25
+
+    def decYy(self):
+        self.zz.y -= 0.25
 
 def main():
     global done
@@ -309,6 +327,12 @@ def main():
                     stat.incZz()
                 elif chr(k) == 'g':
                     stat.decZz()
+                elif chr(k) == 'z':
+                    stat.incYy()
+                    stat.incXx()
+                elif chr(k) == 'x':
+                    stat.decYy()
+                    stat.decXx()
                 elif chr(k) == 'y':
                     stat.incKpxy()
                 elif chr(k) == 'h':
@@ -333,6 +357,7 @@ def main():
                     stat.incKixy()
                 elif chr(k) == 'b':
                     stat.decKixy()
+                
 
         stat.publish()
         rate.sleep()
