@@ -82,12 +82,14 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr &msg) {
   }
   mocap_attitude.set(r, p, y);
   // Fill the list if it is not yet initialized
-  if (x_list[0] == 0.0 && list_counter == 0) {
+  if (pos_list[0].get_x() == 0.0 && list_counter == 0) {
     for (int i = 0; i < LIST_SIZE; i++) {
       t_list[i] = ros::Time::now();
     }
   }
-  list_counter = ++list_counter % LIST_SIZE;
+  list_counter++;
+  list_counter %= LIST_SIZE;
+//  std::cout << list_counter << std::endl;
 
   int prev = (list_counter + 1) % LIST_SIZE;
   pos_list[list_counter].set(mocap.pose.position.x, mocap.pose.position.y,
@@ -97,6 +99,8 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr &msg) {
   ros::Duration dt = t_list[list_counter] - t_list[prev];
 
   velocity.set((pos_list[list_counter] - pos_list[prev]) / dt.toSec());
+//std::cout <<LIST_SIZE<<"\t" <<list_counter <<"\t"<<prev<<"\t" << t_list[list_counter].toNSec() -  t_list[prev].toNSec() << "\t" << velocity.get_x() << std::endl;
+  
 
   calculate_error();
 }
@@ -197,6 +201,7 @@ void *UavMonitor::offboard_control(void *arg) {
   Offboard::Result offboard_result = offboard->start();
   offboard_error_exit(offboard_result, "Offboard start failed");
   offboard_log(offb_mode, "Offboard started");
+  std::cout << "Offboard" << std::endl;
 
   struct duration timeStruct;
   initDuration(&timeStruct);
@@ -238,8 +243,13 @@ void *UavMonitor::offboard_control(void *arg) {
 
 void UavMonitor::set_attitude_targets(Offboard::Attitude *attitude) {
   Triplet<float> attitude_target(kp * erp + kd * erd + ki * eri);
-  attitude_target.get(&(attitude->roll_deg), &(attitude->pitch_deg),
+  attitude_target *= Triplet<float> (-1,1,1);
+  attitude_target.saturate(8, 8, 0.3);
+  attitude_target.get(&(attitude->pitch_deg), &(attitude->roll_deg),
                       &(attitude->thrust_value));
+  attitude->thrust_value += baseline;
+  attitude->pitch_deg -= 2;
+  attitude->roll_deg += 1;
   attitude->yaw_deg = target_yaw - offset_yaw;
 
   uav_thrust = attitude->thrust_value;
@@ -268,7 +278,7 @@ void UavMonitor::calculate_error() {
   geometry_msgs::Point error_transformed;
   tf2::doTransform(error, error_transformed, yaw_transform);
 
-  tmp.set(Triplet<float>() - velocity);
+  tmp.set(Triplet<float>(-1) * velocity);
   geometry_msgs::Point derror(tmp.to_point());
 
   geometry_msgs::Point derror_transformed;
@@ -276,12 +286,14 @@ void UavMonitor::calculate_error() {
 
   erp.set(error_transformed);
   erd.set(derror_transformed);
-
   int sval;
   sem_getvalue(&begin, &sval);
-  if (sval == 0) {
-    eri += erp / 100;
-    eri.saturate(1.2, 1, 1);
+  if (sval > 0) {
+    eri += (erp / 100);
+	eri.saturate(1, 2, 6);
+  } else {
+	  eri.set(erp);
+	  eri /= Triplet<float>(100, 100, 100);
   }
 }
 

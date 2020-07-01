@@ -1,6 +1,8 @@
 <launch>
 	<!--group ns="HexyBoi"-->
 	
+		<!--include file="$(find offboard)/launch/dynamixel.launch"/-->
+
 		<node pkg="offboard"
 			  type="ros_interface"
 			  name="fly"
