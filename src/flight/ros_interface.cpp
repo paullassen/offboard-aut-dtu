@@ -56,18 +56,18 @@ int main(int argc, char **argv) {
 
   struct param_struct drone_params;
   if (private_node_handle.getParam("mode", drone_params.mode)) {
-    std::cout << "Mode Found" << std::endl;
+    std::cout << "Mode Found " << std::endl;
   } else {
     drone_params.mode = 0;
   }
 
-  if (private_node_handle.getParam("mode", drone_params.mass)) {
+  if (private_node_handle.getParam("mass", drone_params.mass)) {
     std::cout << "Mass Found" << std::endl;
   } else {
     drone_params.mass = 0;
   }
 
-  if (private_node_handle.getParam("mode", drone_params.length)) {
+  if (private_node_handle.getParam("length", drone_params.length)) {
     std::cout << "Length Found" << std::endl;
   } else {
     drone_params.length = 0;
