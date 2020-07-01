@@ -1,0 +1,15 @@
+<launch>
+	<!--group ns="HexyBoi"-->
+	
+		<!--include file="$(find offboard)/launch/dynamixel.launch"/-->
+
+		<node pkg="offboard"
+			  type="attitude_test"
+			  name="fly"
+			  output="screen">
+			  
+				<param name="~url" type="string" value="serial:///dev/ttyACM0" />
+		</node>
+
+	<!-- /group-->
+</launch>
