@@ -1,0 +1,13 @@
+<launch>
+	<!--group ns="HexyBoi"-->
+	
+		<node pkg="offboard"
+			  type="ros_interface"
+			  name="fly"
+			  output="screen">
+			  
+				<param name="~url" type="string" value="serial:///dev/ttyACM0" />
+		</node>
+
+	<!-- /group-->
+</launch>
