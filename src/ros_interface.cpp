@@ -68,25 +68,25 @@ int main(int argc, char ** argv){
 
 	/* Create ROS publishers */
 	ros::Publisher health_pub = nh.advertise<offboard::Health>
-									("test/health", 10);
+									("health", 10);
 	ros::Publisher att_pub = nh.advertise<geometry_msgs::PointStamped>
-									("test/attitude", 10);
+									("attitude", 10);
 	ros::Publisher matt_pub = nh.advertise<geometry_msgs::PointStamped>
-									("test/mocap_att", 10);
+									("mocap_att", 10);
 	ros::Publisher err_pub = nh.advertise<geometry_msgs::PointStamped>
-									("test/err", 10);
+									("err", 10);
 	ros::Publisher erd_pub = nh.advertise<geometry_msgs::PointStamped>
-									("test/erd", 10);
+									("erd", 10);
 	ros::Publisher eri_pub = nh.advertise<geometry_msgs::PointStamped>
-									("test/eri", 10);
+									("eri", 10);
 	ros::Publisher in_pub = nh.advertise<geometry_msgs::PointStamped>
-									("test/att_in", 10);
+									("att_in", 10);
 	ros::Publisher thrust_pub = nh.advertise<std_msgs::Float32>
-									("test/thrust", 10);
+									("thrust", 10);
 	ros::Publisher actuator_target_pub = nh.advertise<offboard::ActuatorArray>
-									("test/actuator_target", 10);
+									("actuator_target", 10);
 	ros::Publisher actuator_status_pub = nh.advertise<offboard::ActuatorArray>
-									("test/actuator_status", 10);
+									("actuator_status", 10);
 	ros::Rate rate(50.0);
 
 	/* Create UavMonitor to handle controllers */
@@ -95,25 +95,25 @@ int main(int argc, char ** argv){
 	/* Start Battery Subscriber */
 	Telemetry::Result set_rate_result = telemetry->set_rate_battery(2.0);
 	if (set_rate_result != Telemetry::Result::Success) {
-	    std::cout << "Setting rate failed:" << set_rate_result<< std::endl;
+	    std::cout << "Setting batt rate failed:" << set_rate_result<< std::endl;
 	}	
 
 	/* Start Attitude Subscriber */
 	set_rate_result = telemetry->set_rate_attitude(100.0);
 	if (set_rate_result != Telemetry::Result::Success) {
-	    std::cout << "Setting rate failed:" << set_rate_result<< std::endl;
+	    std::cout << "Setting att rate failed:" << set_rate_result<< std::endl;
 	}	
 	
 	/* Start Attitude Subscriber */
 	set_rate_result = telemetry->set_rate_actuator_control_target(100);
 	if (set_rate_result != Telemetry::Result::Success) {
-	    std::cout << "Setting rate failed:" << set_rate_result<< std::endl;
+	    std::cout << "Setting act  rate failed:" << set_rate_result<< std::endl;
 	}	
 
 	/* Start Attitude Subscriber */
 	set_rate_result = telemetry->set_rate_actuator_output_status(100); 
 	if (set_rate_result != Telemetry::Result::Success) {
-	    std::cout << "Setting rate failed:" << set_rate_result<< std::endl;
+	    std::cout << "Setting aos rate failed:" << set_rate_result<< std::endl;
 	}	
 
 	telemetry->subscribe_health([&uav](Telemetry::Health health){
@@ -150,7 +150,7 @@ int main(int argc, char ** argv){
 	/* Find transformation*/
 	tf2_ros::Buffer tBuffer;
 	tf2_ros::TransformListener tfListener(tBuffer);
-	uav.transform = tBuffer.lookupTransform("HexyBoi", "Robot_1/base_link", ros::Time(0), ros::Duration(1.0));
+	uav.transform = tBuffer.lookupTransform("HexyBoi", "base_link", ros::Time(0), ros::Duration(1.0));
 
 	/* start listening for msgs */
 	pthread_t offboard_thread, callback_thread;

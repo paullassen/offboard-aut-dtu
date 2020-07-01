@@ -316,21 +316,21 @@ void *UavMonitor::ros_run(void * arg){
 
 
 	ros::Subscriber kill_switch = nh->subscribe<std_msgs::Bool>
-								("test/kill", 10, &UavMonitor::killCb, uav);
+								("kill", 10, &UavMonitor::killCb, uav);
 	ros::Subscriber baseline_sub = nh->subscribe<std_msgs::Float32>
-								("test/baseline",10, &UavMonitor::baselineCb, uav);
+								("baseline",10, &UavMonitor::baselineCb, uav);
     ros::Subscriber mocap_sub = nh->subscribe<geometry_msgs::PoseStamped>
-                                ("test/mocap", 10, &UavMonitor::mocapCb, uav);
+                                ("mocap", 10, &UavMonitor::mocapCb, uav);
     ros::Subscriber target_sub = nh->subscribe<geometry_msgs::Point>
-                                ("test/target", 10, &UavMonitor::targetCb, uav);
+                                ("target", 10, &UavMonitor::targetCb, uav);
 	ros::Subscriber start_sub = nh->subscribe<std_msgs::Bool>
-								("test/start", 10, &UavMonitor::startCb, uav);
+								("start", 10, &UavMonitor::startCb, uav);
 	ros::Subscriber kp_sub = nh->subscribe<geometry_msgs::Point>
-								("test/kp", 10, &UavMonitor::kpCb, uav);
+								("kp", 10, &UavMonitor::kpCb, uav);
 	ros::Subscriber kd_sub = nh->subscribe<geometry_msgs::Point>
-								("test/kd", 10, &UavMonitor::kdCb, uav);
+								("kd", 10, &UavMonitor::kdCb, uav);
 	ros::Subscriber ki_sub = nh->subscribe<geometry_msgs::Point>
-								("test/ki", 10, &UavMonitor::kiCb, uav);
+								("ki", 10, &UavMonitor::kiCb, uav);
 								
 	ros::spin();
 
