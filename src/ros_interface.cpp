@@ -36,11 +36,21 @@ using std::chrono::seconds;
 using std::this_thread::sleep_for;
 
 int main(int argc, char ** argv){
+	/* Start ROS */
+	ros::init(argc, argv, "interface");
+	//private_node_handler for param handling
+	//Not sure if I need two
+	ros::NodeHandle private_node_handle("~"); 
+	ros::NodeHandle nh;	
+
 	Mavsdk dc;
 	std::string connection_url;
 	ConnectionResult connection_result;
 	/* Get connection url */
-	if (argc == 2){
+	if (private_node_handle.getParam("url", connection_url)){
+		std::cout<<"Found param"<<std::endl;
+		connection_result = dc.add_any_connection(connection_url);
+	}else if (argc == 2){
 		connection_url = argv[1];
 		connection_result = dc.add_any_connection(connection_url);
 	}else{
@@ -62,10 +72,6 @@ int main(int argc, char ** argv){
 	auto offboard	= std::make_shared<Offboard>(system);
 	auto telemetry	= std::make_shared<Telemetry>(system);
 	
-	/* start ROS */	
-	ros::init(argc, argv, "interface");
-	ros::NodeHandle nh;
-
 	/* Create ROS publishers */
 	ros::Publisher health_pub = nh.advertise<offboard::Health>
 									("health", 10);
