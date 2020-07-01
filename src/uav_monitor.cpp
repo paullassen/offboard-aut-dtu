@@ -54,7 +54,7 @@ void UavMonitor::kiCb(const geometry_msgs::Point::ConstPtr& msg){
 void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr& msg){
 
 	geometry_msgs::TransformStamped yaw_transform;
-	yaw_transform.transform.rotation = tf::createQuaternionMsgFromYaw(target_yaw);
+	yaw_transform.transform.rotation = tf::createQuaternionMsgFromYaw(target_yaw*M_PI/180);
 	geometry_msgs::Point out;
 	tf2::doTransform(*msg, out, yaw_transform);
 
