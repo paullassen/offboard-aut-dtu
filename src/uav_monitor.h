@@ -6,6 +6,10 @@
 #include <offboard/Health.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+
 #include <chrono>
 #include <cmath>
 #include <future>
@@ -78,6 +82,8 @@ class UavMonitor
 		double mocap_roll = 0.0;
 		double mocap_pitch = 0.0;
 		double mocap_yaw = 0.0;
+
+		geometry_msgs::TransformStamped transform;
 
 		float uav_thrust = 0;
 		float uav_pitch = 0;

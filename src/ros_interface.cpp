@@ -6,6 +6,12 @@
 #include <std_msgs/Header.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PointStamped.h>
+#include <tf/tf.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+
+
 #include <chrono>
 #include <cmath>
 #include <future>
@@ -141,15 +147,15 @@ int main(int argc, char ** argv){
 	struct duration timeStruct;
 	initDuration(&timeStruct);
 	
+	/* Find transformation*/
+	tf2_ros::Buffer tBuffer;
+	tf2_ros::TransformListener tfListener(tBuffer);
+	uav.transform = tBuffer.lookupTransform("HexyBoi", "Robot_1/base_link", ros::Time(0), ros::Duration(1.0));
+
 	/* start listening for msgs */
 	pthread_t offboard_thread, callback_thread;
 	pthread_create(&callback_thread, NULL, &UavMonitor::ros_run, (void *)&thread_args);
 
-	/* arm drone *//* 
-    Action::Result arm_result = action->arm();
-	action_error_exit(arm_result, "Arming failed");
-    std::cout << "Armed" << std::endl;
-	*/	
 	/* go into offboard control */
 	pthread_create(&offboard_thread, NULL, &UavMonitor::offboard_control, (void *)&thread_args);
 	

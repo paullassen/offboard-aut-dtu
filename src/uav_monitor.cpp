@@ -1,27 +1,32 @@
+//ROS libraries
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/tf.h>
-
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+//Standard C++ libraries
 #include <chrono>
 #include <cmath>
 #include <future>
 #include <iostream>
 #include <thread>
 #include <queue>
-
+//Standard C libraries
 #include <pthread.h>
 #include <ncurses.h>
 #include <unistd.h>
 #include <string.h>
-
+//MAVSDK libraries
 #include <mavsdk/mavsdk.h>
 #include <mavsdk/plugins/action/action.h>
 #include <mavsdk/plugins/offboard/offboard.h>
 #include <mavsdk/plugins/telemetry/telemetry.h>
 #include <mavsdk/plugins/info/info.h>
+//Application libraries
 #include "mavsdk_helper.h"
 #include "uav_monitor.h"
 
@@ -54,10 +59,18 @@ void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr& msg){
 void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 
 	//create quaternion
-	tf::Quaternion q(msg->pose.orientation.x,
-					 msg->pose.orientation.y,
-					 msg->pose.orientation.z,
-					 msg->pose.orientation.w);
+	geometry_msgs::PoseStamped mocap;
+	try{
+		tf2::doTransform(*msg, mocap, transform);
+	}
+	catch (tf2::TransformException &ex) {
+		ROS_WARN("%s", ex.what());
+	}
+
+	tf::Quaternion q(mocap.pose.orientation.x,
+					 mocap.pose.orientation.y,
+					 mocap.pose.orientation.z,
+					 mocap.pose.orientation.w);
 
 	//get rotation matrix
 	tf::Matrix3x3 m(q);
@@ -66,15 +79,9 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 
 	if ((ros::Time::now() - last_time) > ros::Duration(0.5)){
 		//get offset
-		offset_yaw =  - (float) mocap_yaw*180/M_PI - yaw;
+		offset_yaw = (float) mocap_yaw*180/M_PI - yaw;
 		last_time = ros::Time::now();
 	}
-/*
-	std::cout << "Setting Offset ..." << std::endl;
-	std::cout << "\t Mocap yaw: " << off_y*180/M_PI << std::endl;
-	std::cout << "\t   Est yaw: " << yaw << std::endl;
-	std::cout << "\tOffset yaw: " << offset_yaw << std::endl;
-*/
 
 
 	//Fill the list if it is not yet initialized
@@ -86,10 +93,10 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 	list_counter = ++list_counter % LIST_SIZE;
 
 	int prev = (list_counter + 1) % LIST_SIZE;
-	x_list[list_counter] =  msg->pose.position.x;
-	y_list[list_counter] = -msg->pose.position.y;
-	z_list[list_counter] =  msg->pose.position.z;
-	t_list[list_counter] =  msg->header.stamp;
+	x_list[list_counter] =	mocap.pose.position.x;
+	y_list[list_counter] =  mocap.pose.position.y;
+	z_list[list_counter] =  mocap.pose.position.z;
+	t_list[list_counter] =  mocap.header.stamp;
 
 	ros::Duration dt = 
 			t_list[list_counter] - t_list[prev];
@@ -98,24 +105,6 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 	dy = (y_list[list_counter] - y_list[prev])/dt.toSec();
 	dz = (z_list[list_counter] - z_list[prev])/dt.toSec();
 
-/*
-    float last_x = x;
-    float last_y = y;
-    float last_z = z;
-
-    x =  msg->pose.position.x;
-    y = -msg->pose.position.y;
-    z =  msg->pose.position.z;
-
-    
-    ros::Duration dt = msg->header.stamp - last_time;
-    
-    dx = (x-last_x)/dt.toSec();
-    dy = (y-last_y)/dt.toSec();
-    dz = (z-last_z)/dt.toSec();
-    
-    last_time = msg->header.stamp;
-*/
     calculate_error();
 }
 
@@ -263,9 +252,9 @@ float UavMonitor::calculate_pitch(){
 	double ky = (kpy * ey + kdy * edy + kiy * eiy);
 	double kx = (kpx * ex + kdx * edx + kix * eix);
 
-	double yaw_rad = (-mocap_yaw) * M_PI/180;
+	double yaw_rad = (mocap_yaw) * M_PI/180;
 	// 2 degree offset (from data analysis)
-	uav_pitch = -2 + saturate(-kx * cos(yaw_rad) + ky * sin(yaw_rad), 6);
+	uav_pitch = saturate(-kx * cos(yaw_rad) + -ky * sin(yaw_rad), 6);
 	return uav_pitch;
 }
 
@@ -273,7 +262,7 @@ float UavMonitor::calculate_roll(){
 	double ky = (kpy * ey + kdy * edy + kiy * eiy);
 	double kx = (kpx * ex + kdx * edx + kix * eix);
 
-	double yaw_rad = (-mocap_yaw) * M_PI/180;
+	double yaw_rad = (mocap_yaw) * M_PI/180;
 	
 	uav_roll =  saturate(-kx * sin(yaw_rad) + ky * cos(yaw_rad), 6);
 	return uav_roll;
@@ -310,9 +299,11 @@ void UavMonitor::calculate_error(){
     edy = -dy;
     edz = -dz;
 
-	eix += ex/100;
-	eiy += ey/100;
-	eiz += ez/100;
+	if(!begin){
+		eix += ex/100;
+		eiy += ey/100;
+		eiz += ez/100;
+	}
 }
 
 void *UavMonitor::ros_run(void * arg){
