@@ -95,7 +95,7 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 	int prev = (list_counter + 1) % LIST_SIZE;
 	x_list[list_counter] =	mocap.pose.position.x;
 	y_list[list_counter] =  mocap.pose.position.y;
-	z_list[list_counter] =  mocap.pose.position.z;
+	z_list[list_counter] = -mocap.pose.position.z;
 	t_list[list_counter] =  mocap.header.stamp;
 
 	ros::Duration dt = 
