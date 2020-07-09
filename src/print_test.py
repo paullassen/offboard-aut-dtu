@@ -68,7 +68,8 @@ class Status:
 
         self.bl = smsg.Float32()
         self.kl = smsg.Bool()
-
+        self.st = smsg.Bool()
+        self.st.data = False
         self.pos = geo.Point()
         self.vel = geo.Point()
         self.err = geo.Point()
@@ -98,6 +99,7 @@ class Status:
         self.bl_pub = rospy.Publisher('test/baseline', smsg.Float32, queue_size=1)
         self.zz_pub = rospy.Publisher('test/target', geo.Point, queue_size=1)
         self.kl_pub = rospy.Publisher('test/kill', smsg.Bool, queue_size=1)
+        self.st_pub = rospy.Publisher('test/start', smsg.Bool, queue_size=1)
 
     def healthCb(self, msg):
         self.health = msg
@@ -133,6 +135,7 @@ class Status:
         self.bl_pub.publish(self.bl)
         self.zz_pub.publish(self.zz)
         self.kl_pub.publish(self.kl)
+        self.st_pub.publish(self.st)
 
 
     def print_status(self, first=False):
@@ -294,6 +297,9 @@ class Status:
     def decYy(self):
         self.zz.y -= 0.25
 
+    def start(self):
+        self.st.data = True
+
 def main():
     global done
     init_anykey()
@@ -366,6 +372,8 @@ def main():
                     stat.incKixy()
                 elif chr(k) == 'b':
                     stat.decKixy()
+                elif chr(k) == 'c':
+                    stat.start()
                 
 
         stat.publish()
