@@ -1,0 +1,47 @@
+<launch>
+  <!-- Pass in mocap_config_file:=/path/to/config.yaml to change options. -->
+  <arg name="mocap_config_file"
+       default="$(find offboard)/config/mocap.yaml" />
+  <arg name="drone_name"
+		default="HexyBoi" />
+  
+  <machine name="rpi"
+		   user="pi"
+		   address="hexyboi"
+		   password="raspberry"
+		   env-loader="/home/pi/catkin_ws/env.sh"/>
+
+  <group ns="$(arg drone_name)">
+
+		<node pkg="mocap_optitrack"
+  		      type="mocap_node"
+  		      name="mocap_node"
+  		      respawn="false"
+  		      launch-prefix=""
+  		      required="true">
+  		  <rosparam file="$(arg mocap_config_file)" command="load" />
+  		</node>
+	
+  		<node pkg="tf"
+			  type="static_transform_publisher"
+  		  	  name="static_transform"
+  		  	  args="0.0 0.0 0.0 0.0 0.0 3.14159 base_link $(arg drone_name) 10">
+  		</node>
+  		
+		<node pkg="offboard"
+  		  	  type="drone_ui.py"
+  		  	  name="clui"
+  		  	  output="screen"
+  		      required="true">
+  		</node>
+
+		<!--node machine="rpi"
+			  pkg="offboard"
+			  type="ros_interface"
+			  name="flight"
+			  args="serial:///dev/ttyACM0"
+		-->
+
+  </group>
+
+</launch>

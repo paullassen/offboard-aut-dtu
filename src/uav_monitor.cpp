@@ -56,6 +56,10 @@ void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr& msg){
     tz = msg->z;
 }
 
+void UavMonitor::yawCb(const std_msgs::Float32::ConstPtr& msg){
+	target_yaw = msg->data;
+}
+
 void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 
 	//create quaternion
@@ -270,7 +274,7 @@ float UavMonitor::calculate_roll(){
 
 float UavMonitor::calculate_yaw(){
 	//double yaw_rad = (yaw+offset_yaw) * M_PI/180;
-	uav_yaw = (float) -offset_yaw;
+	uav_yaw = (float) target_yaw-offset_yaw;
 	return (float) uav_yaw;
 }
 
@@ -331,6 +335,8 @@ void *UavMonitor::ros_run(void * arg){
 								("kd", 10, &UavMonitor::kdCb, uav);
 	ros::Subscriber ki_sub = nh->subscribe<geometry_msgs::Point>
 								("ki", 10, &UavMonitor::kiCb, uav);
+	ros::Subscriber yw_sub = nh->subscribe<std_msgs::Float32>
+								("yaw_target", 10, &UavMonitor::yawCb, uav);
 								
 	ros::spin();
 

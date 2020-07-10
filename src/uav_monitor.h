@@ -3,6 +3,7 @@
 
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Float32.h>
 #include <offboard/Health.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -78,6 +79,7 @@ class UavMonitor
         float kiz = 0;
 
 		float baseline = 0.1;
+		float target_yaw = 0.0;
 		
 		double mocap_roll = 0.0;
 		double mocap_pitch = 0.0;
@@ -140,6 +142,7 @@ class UavMonitor
 		void startCb(const std_msgs::Bool::ConstPtr& msg);
 		void baselineCb(const std_msgs::Float32::ConstPtr& msg);
 		void targetCb(const geometry_msgs::Point::ConstPtr& msg);
+		void yawCb(const std_msgs::Float32::ConstPtr& msg);
 		void mocapCb(const geometry_msgs::PoseStamped::ConstPtr& msg);
 
 		//Threads
