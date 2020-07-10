@@ -53,15 +53,12 @@ void UavMonitor::kiCb(const geometry_msgs::Point::ConstPtr& msg){
 
 void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr& msg){
 
-	geometry_msgs::TransformStamped yaw_transform;
 	yaw_transform.transform.rotation = tf::createQuaternionMsgFromYaw(target_yaw*M_PI/180);
-	geometry_msgs::Point out;
-	tf2::doTransform(*msg, out, yaw_transform);
 
 
-    tx = out.x;
-    ty = out.y;
-    tz = out.z;
+    tx = msg->x;
+    ty = msg->y;
+    tz = msg->z;
 
 }
 
@@ -304,13 +301,30 @@ float UavMonitor::saturate_minmax(double in, double min, double max)
 }
 
 void UavMonitor::calculate_error(){
-    ex = tx - x_list[list_counter];
-    ey = ty - y_list[list_counter];
-    ez = tz - z_list[list_counter];
 
-    edx = -dx;
-    edy = -dy;
-    edz = -dz;
+	geometry_msgs::Point error;
+	geometry_msgs::Point error_transformed;
+	error.x = tx - x_list[list_counter];
+	error.y = ty - y_list[list_counter];
+	error.z = tz - z_list[list_counter];
+	
+	tf2::doTransform(error, error_transformed, yaw_transform);
+	
+	geometry_msgs::Point derror;
+	geometry_msgs::Point derror_transformed;
+	derror.x = -dx;
+	derror.y = -dy;
+	derror.z = -dz;
+
+	tf2::doTransform(derror, derror_transformed, yaw_transform);
+
+    ex = error_transformed.x;
+    ey = error_transformed.y;
+    ez = error_transformed.z;
+
+    edx = derror_transformed.x;
+    edy = derror_transformed.y;
+    edz = derror_transformed.z;
 
 	if(begin){
 		eix += ex/100;
