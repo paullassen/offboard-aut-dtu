@@ -192,9 +192,9 @@ int main(int argc, char ** argv){
 		attitude.point.z = uav.yaw;
 		attitude.header = header;
 
-		mocap_att.point.x = uav.mocap_roll;
-		mocap_att.point.y = uav.mocap_pitch;
-		mocap_att.point.z = uav.mocap_yaw;
+		mocap_att.point.x = uav.mocap_roll*180/M_PI;
+		mocap_att.point.y = uav.mocap_pitch*180/M_PI;
+		mocap_att.point.z = uav.mocap_yaw*180/M_PI;
 		mocap_att.header = header;
 
 		err.point.x = uav.ex;
