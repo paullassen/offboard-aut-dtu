@@ -86,7 +86,7 @@ class UavMonitor
 		double mocap_yaw = 0.0;
 
 		geometry_msgs::TransformStamped transform;
-
+		geometry_msgs::TransformStamped yaw_transform;
 		float uav_thrust = 0;
 		float uav_pitch = 0;
 		float uav_roll = 0;

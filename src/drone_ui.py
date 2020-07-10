@@ -353,10 +353,10 @@ def main():
                 elif chr(k) == 'g':
                     stat.decZz()
                 elif chr(k) == 'z':
-                    stat.incYy()
+                    #stat.incYy()
                     stat.incXx()
                 elif chr(k) == 'x':
-                    stat.decYy()
+                    #stat.decYy()
                     stat.decXx()
                 elif chr(k) == 'y':
                     stat.incKpxy()

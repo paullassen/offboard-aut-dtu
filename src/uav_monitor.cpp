@@ -4,6 +4,7 @@
 #include <std_msgs/Float32.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <tf/tf.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/buffer.h>
@@ -51,9 +52,17 @@ void UavMonitor::kiCb(const geometry_msgs::Point::ConstPtr& msg){
 }
 
 void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr& msg){
-    tx = msg->x;
-    ty = msg->y;
-    tz = msg->z;
+
+	geometry_msgs::TransformStamped yaw_transform;
+	yaw_transform.transform.rotation = tf::createQuaternionMsgFromYaw(target_yaw);
+	geometry_msgs::Point out;
+	tf2::doTransform(*msg, out, yaw_transform);
+
+
+    tx = out.x;
+    ty = out.y;
+    tz = out.z;
+
 }
 
 void UavMonitor::yawCb(const std_msgs::Float32::ConstPtr& msg){
