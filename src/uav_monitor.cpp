@@ -264,7 +264,8 @@ float UavMonitor::calculate_pitch(){
 
 	double yaw_rad = (mocap_yaw) * M_PI/180;
 	// 2 degree offset (from data analysis)
-	uav_pitch = -2+saturate(-kx * cos(yaw_rad) + -ky * sin(yaw_rad), 6);
+	//uav_pitch = -2+saturate(-kx * cos(yaw_rad) + -ky * sin(yaw_rad), 6);
+	uav_pitch = -2+saturate(-kx,6);
 	return uav_pitch;
 }
 
@@ -274,7 +275,8 @@ float UavMonitor::calculate_roll(){
 
 	double yaw_rad = (mocap_yaw) * M_PI/180;
 	
-	uav_roll =  saturate(-kx * sin(yaw_rad) + ky * cos(yaw_rad), 6);
+	//uav_roll =  saturate(-kx * sin(yaw_rad) + ky * cos(yaw_rad), 6);
+	uav_roll =  saturate(ky, 6);
 	return uav_roll;
 }
 
