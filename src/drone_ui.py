@@ -131,6 +131,21 @@ class Status:
     def thrustCb(self, msg):
         self.thrust = msg.data
 
+    def baselineCb(self, msg):
+        self.bl = msg
+
+    def targetCb(self, msg):
+        self.zz = msg
+
+    def killCb(self, msg):
+        self.kl = msg
+
+    def startCb(self, msg):
+        self.st = msg
+
+    def yawCb(self, msg):
+        self.yaw = msg
+
     def publish(self):
         self.kp_pub.publish(self.kp)
         self.kd_pub.publish(self.kd)
@@ -330,6 +345,11 @@ def main():
     rospy.Subscriber('eri', geo.PointStamped, stat.eriCb)
     rospy.Subscriber('thrust', smsg.Float32, stat.thrustCb)
 
+    rospy.Subscriber('baseline_', smsg.Float32, stat.baselineCb)
+    rospy.Subscriber('target_', geo.Point, stat.targetCb)
+    rospy.Subscriber('kill_', smsg.Bool, stat.killCb)
+    rospy.Subscriber('start_', smsg.Bool, stat.startCb)
+    rospy.Subscriber('yaw_target_', smsg.Float32, stat.yawCb)
     intro()
     stat.print_status(True)
     while not done:
