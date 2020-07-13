@@ -1,0 +1,25 @@
+<launch>
+	<arg name="drone_name"
+		 default="HexyBoi"/>
+
+	<group ns="$(arg drone_name)">
+
+  <!-- Start collecting joystick data -->
+		<node pkg="joy"
+			  name="joy_node"
+			  type="joy_node">
+			  <param name="dev" type="string" value="/dev/input/js1" />
+		</node>
+
+  <!-- Use Joystick to to send data -->
+		<node pkg="offboard"
+			  type="joystick_control.py"
+			  name="joycl"
+			  required="true">
+		</node>
+	</group>
+
+	<include file="$(find offboard)/launch/startup.launch"
+			 pass_all_args="true"/>
+
+</launch>
