@@ -204,6 +204,12 @@ target_link_libraries(test
 	${catkin_LIBRARIES}
 	${Boost_LIBRARIES}
 	)
+
+add_executable(joy_ctrl src/joystick_ctrl.cpp)
+target_link_libraries(joy_ctrl
+	${catkin_LIBRARIES}
+	${Boost_LIBRARIES}
+	)
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
