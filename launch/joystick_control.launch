@@ -8,15 +8,24 @@
 		<node pkg="joy"
 			  name="joy_node"
 			  type="joy_node">
-			  <param name="dev" type="string" value="/dev/input/js1" />
+			  <param name="dev" type="string" value="/dev/input/js2" />
 		</node>
 
   <!-- Use Joystick to to send data -->
+  
+	<node pkg="offboard"
+		  type="joy_ctrl"
+		  name="joycl"
+		  required="true"
+	/>
+
+  <!--	
 		<node pkg="offboard"
 			  type="joystick_control.py"
 			  name="joycl"
 			  required="true">
 		</node>
+  -->
 	</group>
 
 	<include file="$(find offboard)/launch/startup.launch"
