@@ -8,7 +8,7 @@
 		<node pkg="joy"
 			  name="joy_node"
 			  type="joy_node">
-			  <param name="dev" type="string" value="/dev/input/js2" />
+			  <param name="dev" type="string" value="/dev/input/js1" />
 		</node>
 
   <!-- Use Joystick to to send data -->

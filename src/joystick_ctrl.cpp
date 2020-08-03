@@ -1,3 +1,4 @@
+#include <dynamixel_workbench_msgs/DynamixelCommand.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -17,6 +18,8 @@
 #include <utility>
 
 #define UPDATE_RATE 50
+#define MANIPULATOR_MINIMUM 300
+#define MANIPULATOR_MAXIMUM 740
 
 class Button {
  public:
@@ -116,6 +119,8 @@ class Stick {
 class Controller {
  public:
   ros::NodeHandle* nh;
+  ros::ServiceClient manip_client;
+
   sensor_msgs::Joy joystick;
   geometry_msgs::Point target;
   std_msgs::Bool start, kill;
@@ -134,7 +139,7 @@ class Controller {
 
   std::list<Button> buttons;
   std::list<Cross> cross;
-  std::list<Stick> stick;
+  // std::list<Stick> stick;
 
   Controller(ros::NodeHandle* n) : nh(n) {
     bl_pub = nh->advertise<std_msgs::Float32>("baseline_", 10);
@@ -142,6 +147,11 @@ class Controller {
     st_pub = nh->advertise<std_msgs::Bool>("start_", 10);
     kl_pub = nh->advertise<std_msgs::Bool>("kill_", 10);
     tg_pub = nh->advertise<geometry_msgs::Point>("target_", 10);
+
+    manip_client =
+        nh->serviceClient<dynamixel_workbench_msgs::DynamixelCommand>(
+            "dynamixel_workbench/dynamixel_command");
+
     initController();
   }
 
@@ -152,10 +162,17 @@ class Controller {
     buttons.push_back(Button(3, "x", [this] { this->baseline.data += 0.1; }));
     buttons.push_back(Button(4, "Lb", [this] { this->yaw.data -= 5; }));
     buttons.push_back(Button(5, "Rb", [this] { this->yaw.data += 5; }));
-    buttons.push_back(Button(6, "Lt", [this] { this->target.z += 0.5; }));
-    buttons.push_back(Button(7, "Rt", [this] { this->target.z -= 0.5; }));
-    buttons.push_back(Button(8, "minus"));
-    buttons.push_back(Button(9, "plus", [this] { this->start.data = true; }));
+    buttons.push_back(Button(6, "Lt", [this] { this->target.z -= 0.5; }));
+    buttons.push_back(Button(7, "Rt", [this] { this->target.z += 0.5; }));
+    buttons.push_back(Button(8, "minus", [this] {
+      this->command_manipulator(MANIPULATOR_MINIMUM);
+    }));
+    buttons.push_back(Button(
+        9, "plus", [this] { this->command_manipulator(MANIPULATOR_MAXIMUM); }));
+    buttons.push_back(Button(10, "ls"));
+    buttons.push_back(Button(11, "rs"));
+    buttons.push_back(Button(12, "home", [this] { this->start.data = true; }));
+    buttons.push_back(Button(13, "cap"));
 
     cross.push_back(Cross(
         4, "LR",
@@ -182,10 +199,20 @@ class Controller {
           this->reset_relative_target();
         }));
 
-    stick.push_back(Stick(0, "lLR", &relative_y));
-    stick.push_back(Stick(1, "lUD", &relative_x));
-    stick.push_back(Stick(2, "rLR", &relative_yaw, 180));
-    stick.push_back(Stick(3, "rUD", &relative_z));
+    // stick.push_back(Stick(0, "lLR", &relative_y));
+    // stick.push_back(Stick(1, "lUD", &relative_x));
+    // stick.push_back(Stick(2, "rLR", &relative_yaw, 180));
+    // stick.push_back(Stick(3, "rUD", &relative_z));
+  }
+
+  bool command_manipulator(int value) {
+    dynamixel_workbench_msgs::DynamixelCommand srv;
+    srv.request.command = "";
+    srv.request.id = 4;
+    srv.request.addr_name = "Goal_Position";
+    srv.request.value = value;
+
+    return manip_client.call(srv);
   }
 
   void reset_relative_target(void) {
@@ -193,24 +220,24 @@ class Controller {
     relative_y = 0;
   }
 
-  void set_relative_target(void) {
-    for (Stick s : stick) {
-      s.update_relative();
-    }
+  // void set_relative_target(void) {
+  //  for (Stick s : stick) {
+  //    s.update_relative();
+  //  }
 
-    yaw.data = relative_yaw;
+  //  yaw.data = relative_yaw;
 
-    if (relative_x == 0 && relative_y == 0) {
-      geometry_msgs::Point relative_target;
-      relative_target.x = relative_x;
-      relative_target.y = relative_y;
-      relative_target.z = relative_z;
-      geometry_msgs::TransformStamped transform;
-      transform.transform.rotation =
-          tf::createQuaternionMsgFromYaw(relative_yaw * M_PI / 180);
-      tf2::doTransform(relative_target, target, transform);
-    }
-  }
+  //  if (relative_x == 0 && relative_y == 0) {
+  //    geometry_msgs::Point relative_target;
+  //    relative_target.x = relative_x;
+  //    relative_target.y = relative_y;
+  //    relative_target.z = relative_z;
+  //    geometry_msgs::TransformStamped transform;
+  //    transform.transform.rotation =
+  //        tf::createQuaternionMsgFromYaw(relative_yaw * M_PI / 180);
+  //    tf2::doTransform(relative_target, target, transform);
+  //  }
+  //}
 
   void joyCb(const sensor_msgs::Joy::ConstPtr& msg) {
     for (Button b : buttons) {
@@ -219,9 +246,9 @@ class Controller {
     for (Cross c : cross) {
       c.update(msg->axes[c.index]);
     }
-    for (Stick s : stick) {
-      s.update(msg->axes[s.index]);
-    }
+    // for (Stick s : stick) {
+    //  s.update(msg->axes[s.index]);
+    //}
   }
 
   void publish(void) {
@@ -240,7 +267,9 @@ int main(int argc, char** argv) {
   Controller controller(&nh);
   ros::Subscriber joy_sub = nh.subscribe<sensor_msgs::Joy>(
       "joy", 10, &Controller::joyCb, &controller);
+
   ros::Rate rate(UPDATE_RATE);
+
   while (ros::ok()) {
     ros::spinOnce();
     controller.publish();
