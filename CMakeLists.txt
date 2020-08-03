@@ -75,13 +75,10 @@ catkin_package(
 
 
 include_directories(
-# include
+  include/
   ${catkin_INCLUDE_DIRS}
 )
 
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/uav_test.cpp
-# )
 
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 #add_executable(offb_node src/offb_node.cpp)
@@ -91,8 +88,8 @@ include_directories(
 #add_executable(att src/att.cpp)
 #target_link_libraries(att ${catkin_LIBRARIES})
 
-add_library(mavsdk_helper src/mavsdk_helper.h src/mavsdk_helper.cpp)
-add_library(uav_monitor src/uav_monitor.h src/uav_monitor.cpp)
+add_library(mavsdk_helper src/mavsdk_helper.cpp)
+add_library(uav_monitor src/uav_monitor.cpp)
 
 target_link_libraries(mavsdk_helper
     MAVSDK::mavsdk_telemetry
@@ -133,11 +130,6 @@ target_link_libraries(ros_interface
 
 	${Boost_LIBRARIES}
 )
-add_executable(test src/test.cpp)
-target_link_libraries(test
-	${catkin_LIBRARIES}
-	${Boost_LIBRARIES}
-	)
 
 add_executable(joy_ctrl src/joystick_ctrl.cpp)
 target_link_libraries(joy_ctrl
