@@ -215,16 +215,19 @@ void *UavMonitor::offboard_control(void *arg) {
 
   struct duration timeStruct;
   initDuration(&timeStruct);
+  ros::Time start = ros::Time::now();
   while (!m->kill) {
-    ros::Time start = ros::Time::now();
+    // Control Loop Timer
+    ros::Time end = ros::Time::now();
+    ros::Duration t = end - start;
+    addDuration(t, &timeStruct);
+    start = end;
+    // Control Loop
     attitude.thrust_value = m->calculate_thrust();
     attitude.roll_deg = m->calculate_roll();
     attitude.pitch_deg = m->calculate_pitch();
     attitude.yaw_deg = m->calculate_yaw();
     offboard->set_attitude(attitude);
-    ros::Time end = ros::Time::now();
-    ros::Duration t = end - start;
-    addDuration(t, &timeStruct);
     rate.sleep();
   }
 
