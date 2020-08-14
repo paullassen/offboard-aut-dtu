@@ -113,6 +113,7 @@ target_link_libraries(uav_monitor
 
 add_executable(ros_interface src/ros_interface.cpp)
 add_executable(mocap_to_quat src/mocap_to_quat.cpp)
+add_executable(attitude_test src/att_test.cpp)
 target_link_libraries(mocap_to_quat
 	${catkin_LIBRARIES}
 	${Boost_LIBRARIES}
@@ -129,6 +130,20 @@ target_link_libraries(ros_interface
 	mavsdk_helper
 
 	${Boost_LIBRARIES}
+)
+target_link_libraries(attitude_test 
+	${catkin_LIBRARIES}
+    MAVSDK::mavsdk_telemetry
+    MAVSDK::mavsdk_action
+    MAVSDK::mavsdk_info
+    MAVSDK::mavsdk_offboard
+    MAVSDK::mavsdk
+
+	uav_monitor
+	mavsdk_helper
+
+	${Boost_LIBRARIES}
+	
 )
 
 add_executable(joy_ctrl src/joystick_ctrl.cpp)
