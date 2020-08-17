@@ -299,10 +299,10 @@ class Status:
         self.bl.data -= 0.01
     
     def incZz(self):
-        self.zz.z += 0.25
+        self.zz.z += 0.12
     
     def decZz(self):
-        self.zz.z -= 0.25
+        self.zz.z -= 0.12
 
     def incXx(self):
         self.zz.x += 0.25
