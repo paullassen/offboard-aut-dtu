@@ -2,12 +2,15 @@
 #define ATTITUDE_STEP_H
 #include "uav_monitor.h"
 class AttitudeStep : public UavMonitor {
-  float calculate_thrust() { return baseline; }
+ public:
+  virtual ~AttitudeStep() {}
 
-  float calculate_roll() { return tx; }
+  virtual float calculate_thrust() { return baseline; }
 
-  float calculate_pitch() { return ty; }
+  virtual float calculate_roll() { return tx; }
 
-  float calculate_yaw() { return yaw; }
+  virtual float calculate_pitch() { return ty; }
+
+  virtual float calculate_yaw() { return yaw; }
 };
 #endif

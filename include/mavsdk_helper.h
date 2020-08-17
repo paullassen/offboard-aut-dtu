@@ -14,9 +14,6 @@
 #include <mavsdk/plugins/telemetry/telemetry.h>
 
 using namespace mavsdk;
-using std::chrono::milliseconds;
-using std::chrono::seconds;
-using std::this_thread::sleep_for;
 
 #define ERROR_CONSOLE_TEXT "\033[31m"      // Turn text on console red
 #define TELEMETRY_CONSOLE_TEXT "\033[34m"  // Turn text on console blue

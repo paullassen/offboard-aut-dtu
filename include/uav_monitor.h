@@ -33,6 +33,7 @@
 using namespace mavsdk;
 class UavMonitor {
  public:
+  virtual ~UavMonitor() {}
   uint64_t dur = 0;
   ros::Time last_time = ros::Time::now();
 
@@ -114,10 +115,10 @@ class UavMonitor {
   void set_actuator_target(Telemetry::ActuatorControlTarget);
   void set_actuator_status(Telemetry::ActuatorOutputStatus);
 
-  float calculate_thrust();
-  float calculate_roll();
-  float calculate_pitch();
-  float calculate_yaw();
+  virtual float calculate_thrust();
+  virtual float calculate_roll();
+  virtual float calculate_pitch();
+  virtual float calculate_yaw();
   void calculate_error();
 
   float saturate(double in, double minmax);
@@ -131,9 +132,9 @@ class UavMonitor {
   void print();
 
   int ch = ' ';
-  bool done = false;
-  bool kill = false;
-  bool begin = false;
+  volatile bool done = false;
+  volatile bool kill = false;
+  volatile bool begin = false;
 
   // Callback Functions
   void kpCb(const geometry_msgs::Point::ConstPtr& msg);
