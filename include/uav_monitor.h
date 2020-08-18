@@ -11,13 +11,12 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
+#include <semaphore.h>
 #include <chrono>
 #include <cmath>
 #include <future>
 #include <iostream>
 #include <thread>
-
-#include <queue>
 
 #include <mavsdk/mavsdk.h>
 #include <mavsdk/plugins/action/action.h>
@@ -30,9 +29,165 @@
 #define MANIPULATOR_MAXIMUM 605
 #define MANIPULATOR_MINIMUM 405
 
+template <class T>
+class Triplet {
+ private:
+  T x;
+  T y;
+  T z;
+
+ public:
+  Triplet() : x(0), y(0), z(0) {}
+  Triplet(T w_) : x(w_), y(w_), z(w_) {}
+  Triplet(T x_, T y_, T z_) : x(x_), y(y_), z(z_) {}
+  Triplet(const Triplet<float>& obj)
+      : x(obj.get_x()), y(obj.get_y()), z(obj.get_z()) {}
+  Triplet(const Triplet<double>& obj)
+      : x(obj.get_x()), y(obj.get_y()), z(obj.get_z()) {}
+  Triplet(const Triplet<int>& obj)
+      : x(obj.get_x()), y(obj.get_y()), z(obj.get_z()) {}
+
+  void set_x(T x_) { x = x_; }
+  void set_y(T y_) { y = y_; }
+  void set_z(T z_) { z = z_; }
+
+  void set(T x_, T y_, T z_) {
+    set_x(x_);
+    set_y(y_);
+    set_z(z_);
+  }
+
+  void set(const Triplet<T>& obj) {
+    set_x(obj.get_x());
+    set_y(obj.get_y());
+    set_z(obj.get_z());
+  }
+
+  void set(const geometry_msgs::Point& obj) {
+    set_x(obj.x);
+    set_y(obj.y);
+    set_z(obj.z);
+  }
+
+  T get_x(void) const { return x; }
+  T get_y(void) const { return y; }
+  T get_z(void) const { return z; }
+  T get(float* x, float* y, float* z) {
+    *x = get_x();
+    *y = get_y();
+    *z = get_z();
+  }
+
+  geometry_msgs::Point to_point() {
+    geometry_msgs::Point result;
+    result.x = get_x();
+    result.y = get_y();
+    result.z = get_z();
+    return result;
+  }
+
+  void saturate(T minmax) { saturate(-minmax, minmax); }
+  void saturate(T min, T max) {
+    if (x > max) {
+      set_x(max);
+    } else if (x < min) {
+      set_x(min);
+    }
+    if (y > max) {
+      set_y(max);
+    } else if (y < min) {
+      set_y(min);
+    }
+    if (z > max) {
+      set_z(max);
+    } else if (z < min) {
+      set_z(min);
+    }
+  }
+  void saturate(T mx, T my, T mz) {
+    if (x > mx) {
+      set_x(mx);
+    } else if (x < -mx) {
+      set_x(-mx);
+    }
+    if (y > my) {
+      set_y(my);
+    } else if (y < -my) {
+      set_y(-my);
+    }
+    if (z > mz) {
+      set_z(mz);
+    } else if (z < -mz) {
+      set_z(-mz);
+    }
+  }
+
+  void print() {
+    std::cout << "\n-------------" << std::endl;
+    std::cout << "x: " << x << std::endl;
+    std::cout << "y: " << y << std::endl;
+    std::cout << "z: " << z << std::endl;
+    std::cout << "-------------" << std::endl;
+  }
+
+  Triplet& operator+=(const Triplet& obj) {
+    x += (T)obj.x;
+    y += (T)obj.y;
+    z += (T)obj.z;
+    return *this;
+  }
+
+  Triplet operator+(const Triplet& obj) {
+    Triplet<T> result(*this);
+    result += obj;
+    return result;
+  }
+
+  Triplet& operator-=(const Triplet& obj) {
+    x -= (T)obj.x;
+    y -= (T)obj.y;
+    z -= (T)obj.z;
+    return *this;
+  }
+
+  Triplet operator-(const Triplet& obj) {
+    Triplet<T> result(*this);
+    result -= obj;
+    return result;
+  }
+
+  Triplet& operator*=(const Triplet& obj) {
+    x *= (T)obj.x;
+    y *= (T)obj.y;
+    z *= (T)obj.z;
+    return *this;
+  }
+
+  Triplet operator*(const Triplet& obj) {
+    Triplet<T> result(*this);
+    result *= obj;
+    return result;
+  }
+
+  Triplet operator/=(const Triplet& obj) {
+    x /= (T)obj.x;
+    y /= (T)obj.y;
+    z /= (T)obj.z;
+    return *this;
+  }
+
+  Triplet operator/(double obj) {
+    Triplet<T> div(obj);
+    Triplet<T> result(*this);
+    result /= div;
+    return result;
+  }
+};
+
 using namespace mavsdk;
 class UavMonitor {
  public:
+  UavMonitor() { sem_init(&begin, 0, 0); }
   virtual ~UavMonitor() {}
   uint64_t dur = 0;
   ros::Time last_time = ros::Time::now();
@@ -41,84 +196,49 @@ class UavMonitor {
   float x_list[LIST_SIZE] = {};
   float y_list[LIST_SIZE] = {};
   float z_list[LIST_SIZE] = {};
+  Triplet<float> pos_list[LIST_SIZE] = {};
   ros::Time t_list[LIST_SIZE] = {};
 
-  float x = 0;
-  float y = 0;
-  float z = 0;
+  Triplet<float> position;
+  Triplet<float> velocity;
+  Triplet<float> target;
 
-  float dx = 0;
-  float dy = 0;
-  float dz = 0;
+  Triplet<float> erp;  // Position Error
+  Triplet<float> erd;  // Derivative Error
+  Triplet<float> eri;  // Integrated Error
 
-  float tx = 0;
-  float ty = 0;
-  float tz = 0;
+  Triplet<float> kp;  // Position Gain
+  Triplet<float> kd;  // Derivative Gain
+  Triplet<float> ki;  // Integrated Gain
 
-  float ex = 0;
-  float ey = 0;
-  float ez = 0;
-
-  float edx = 0;
-  float edy = 0;
-  float edz = 0;
-
-  float eix = 0;
-  float eiy = 0;
-  float eiz = 0;
-
-  float kpx = 0;
-  float kpy = 0;
-  float kpz = 0;
-
-  float kdx = 0;
-  float kdy = 0;
-  float kdz = 0;
-
-  float kix = 0;
-  float kiy = 0;
-  float kiz = 0;
+  Triplet<double> mocap_attitude;
+  Triplet<float> rpy;
+  Triplet<float> uav_rpy;
 
   float baseline = 0.1;
-  float target_yaw = 0.0;
+  float uav_thrust = 0;
 
-  double mocap_roll = 0.0;
-  double mocap_pitch = 0.0;
-  double mocap_yaw = 0.0;
+  float target_yaw = 0.0;
+  float offset_yaw = 0.0;
 
   geometry_msgs::TransformStamped transform;
   geometry_msgs::TransformStamped yaw_transform;
   ros::ServiceClient manip_client;
 
-  float uav_thrust = 0;
-  float uav_pitch = 0;
-  float uav_roll = 0;
-  float uav_yaw = 0;
   // Health
   offboard::Health health;
   // Battery
   float battery = 0.0;
 
-  // Orientation
-  float roll = 0;
-  float pitch = 0;
-  float yaw = 0;
-
-  float offset_yaw = 0.0;
-  std::vector<float> actuator_target;
-  std::vector<float> actuator_status;
 
   // Set Functions
   void set_health(Telemetry::Health);
   void set_battery(Telemetry::Battery);
   void set_angle(Telemetry::EulerAngle);
-  void set_actuator_target(Telemetry::ActuatorControlTarget);
-  void set_actuator_status(Telemetry::ActuatorOutputStatus);
 
-  virtual float calculate_thrust();
-  virtual float calculate_roll();
-  virtual float calculate_pitch();
-  virtual float calculate_yaw();
+  // This function can be overrided in a derived class to insert a new
+  // controller
+  virtual void set_attitude_targets(Offboard::Attitude* attitude);
   void calculate_error();
 
   float saturate(double in, double minmax);
@@ -134,8 +254,7 @@ class UavMonitor {
   int ch = ' ';
   volatile bool done = false;
   volatile bool kill = false;
-  volatile bool begin = false;
-
+  sem_t begin;
   // Callback Functions
   void kpCb(const geometry_msgs::Point::ConstPtr& msg);
   void kdCb(const geometry_msgs::Point::ConstPtr& msg);

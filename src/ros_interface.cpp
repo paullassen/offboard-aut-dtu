@@ -83,10 +83,6 @@ int main(int argc, char **argv) {
   ros::Publisher in_pub =
       nh.advertise<geometry_msgs::PointStamped>("att_in", 10);
   ros::Publisher thrust_pub = nh.advertise<std_msgs::Float32>("thrust", 10);
-  ros::Publisher actuator_target_pub =
-      nh.advertise<offboard::ActuatorArray>("actuator_target", 10);
-  ros::Publisher actuator_status_pub =
-      nh.advertise<offboard::ActuatorArray>("actuator_status", 10);
   ros::Rate rate(50.0);
 
   /* Create UavMonitor to handle controllers */
@@ -104,18 +100,6 @@ int main(int argc, char **argv) {
     std::cout << "Setting att rate failed:" << set_rate_result << std::endl;
   }
 
-  /* Start Attitude Subscriber */
-  set_rate_result = telemetry->set_rate_actuator_control_target(100);
-  if (set_rate_result != Telemetry::Result::Success) {
-    std::cout << "Setting act  rate failed:" << set_rate_result << std::endl;
-  }
-
-  /* Start Attitude Subscriber */
-  set_rate_result = telemetry->set_rate_actuator_output_status(100);
-  if (set_rate_result != Telemetry::Result::Success) {
-    std::cout << "Setting aos rate failed:" << set_rate_result << std::endl;
-  }
-
   telemetry->subscribe_health(
       [&uav](Telemetry::Health health) { uav.set_health(health); });
 
@@ -124,16 +108,6 @@ int main(int argc, char **argv) {
 
   telemetry->subscribe_attitude_euler(
       [&uav](Telemetry::EulerAngle angle) { uav.set_angle(angle); });
-
-  telemetry->subscribe_actuator_control_target(
-      [&uav](Telemetry::ActuatorControlTarget act) {
-        uav.set_actuator_target(act);
-      });
-
-  telemetry->subscribe_actuator_output_status(
-      [&uav](Telemetry::ActuatorOutputStatus aos) {
-        uav.set_actuator_status(aos);
-      });
 
   /* struct to pass objects to threads */
   struct thread_data thread_args;
@@ -167,8 +141,6 @@ int main(int argc, char **argv) {
   // std_msgs::Bool state;
   // std_msgs::Float32 volt;
   offboard::Health health;
-  offboard::ActuatorArray actuator_targets;
-  offboard::ActuatorArray actuator_status;
   geometry_msgs::PointStamped attitude;
   geometry_msgs::PointStamped mocap_att;
   geometry_msgs::PointStamped err;
@@ -187,41 +159,38 @@ int main(int argc, char **argv) {
     health = uav.health;
 
     header.stamp = ros::Time::now();
-
-    attitude.point.x = uav.roll;
-    attitude.point.y = uav.pitch;
-    attitude.point.z = uav.yaw;
+    attitude.point = uav.rpy.to_point();
+    /*    attitude.point.x = uav.roll;
+        attitude.point.y = uav.pitch;
+        attitude.point.z = uav.yaw;*/
     attitude.header = header;
-
-    mocap_att.point.x = uav.mocap_roll * 180 / M_PI;
-    mocap_att.point.y = uav.mocap_pitch * 180 / M_PI;
-    mocap_att.point.z = uav.mocap_yaw * 180 / M_PI;
+    mocap_att.point = uav.mocap_attitude.to_point();
+    /*    mocap_att.point.x = uav.mocap_roll * 180 / M_PI;
+        mocap_att.point.y = uav.mocap_pitch * 180 / M_PI;
+        mocap_att.point.z = uav.mocap_yaw * 180 / M_PI;*/
     mocap_att.header = header;
-
-    err.point.x = uav.ex;
-    err.point.y = uav.ey;
-    err.point.z = uav.ez;
+    err.point = uav.erp.to_point();
+    /*    err.point.x = uav.ex;
+        err.point.y = uav.ey;
+        err.point.z = uav.ez;*/
     err.header = header;
-
-    erd.point.x = uav.edx;
-    erd.point.y = uav.edy;
-    erd.point.z = uav.edz;
+    erd.point = uav.erd.to_point();
+    /*    erd.point.x = uav.edx;
+        erd.point.y = uav.edy;
+        erd.point.z = uav.edz;*/
     erd.header = header;
-
-    eri.point.x = uav.eix;
-    eri.point.y = uav.eiy;
-    eri.point.z = uav.eiz;
+    eri.point = uav.eri.to_point();
+    /*    eri.point.x = uav.eix;
+        eri.point.y = uav.eiy;
+        eri.point.z = uav.eiz;*/
     eri.header = header;
-
-    in.point.x = uav.uav_roll;
-    in.point.y = uav.uav_pitch;
-    in.point.z = uav.uav_yaw;
+    in.point = uav.uav_rpy.to_point();
+    /*    in.point.x = uav.uav_roll;
+        in.point.y = uav.uav_pitch;
+        in.point.z = uav.uav_yaw;*/
     in.header = header;
 
     thrust.data = uav.uav_thrust;
-
-    actuator_targets.actuator = uav.actuator_target;
-    actuator_status.actuator = uav.actuator_status;
 
     att_pub.publish(attitude);
     matt_pub.publish(mocap_att);
@@ -231,8 +200,6 @@ int main(int argc, char **argv) {
     eri_pub.publish(eri);
     in_pub.publish(in);
     thrust_pub.publish(thrust);
-    actuator_target_pub.publish(actuator_targets);
-    actuator_status_pub.publish(actuator_status);
     ros::Time end = ros::Time::now();
     addDuration(end - start, &timeStruct);
     rate.sleep();

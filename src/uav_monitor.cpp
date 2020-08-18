@@ -20,6 +20,7 @@
 // Standard C libraries
 #include <ncurses.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <string.h>
 #include <unistd.h>
 // MAVSDK libraries
@@ -35,30 +36,21 @@
 using namespace mavsdk;
 
 void UavMonitor::kpCb(const geometry_msgs::Point::ConstPtr &msg) {
-  kpx = msg->x;
-  kpy = msg->y;
-  kpz = msg->z;
+  kp.set(msg->x, msg->y, msg->z);
 }
 
 void UavMonitor::kdCb(const geometry_msgs::Point::ConstPtr &msg) {
-  kdx = msg->x;
-  kdy = msg->y;
-  kdz = msg->z;
+  kd.set(msg->x, msg->y, msg->z);
 }
 
 void UavMonitor::kiCb(const geometry_msgs::Point::ConstPtr &msg) {
-  kix = msg->x;
-  kiy = msg->y;
-  kiz = msg->z;
+  ki.set(msg->x, msg->y, msg->z);
 }
 
 void UavMonitor::targetCb(const geometry_msgs::Point::ConstPtr &msg) {
   yaw_transform.transform.rotation =
       tf::createQuaternionMsgFromYaw(-target_yaw * M_PI / 180);
-
-  tx = msg->x;
-  ty = msg->y;
-  tz = msg->z;
+  target.set(msg->x, msg->y, msg->z);
 }
 
 void UavMonitor::yawCb(const std_msgs::Float32::ConstPtr &msg) {
@@ -80,14 +72,15 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr &msg) {
   // get rotation matrix
   tf::Matrix3x3 m(q);
   // get r,p,y
-  m.getRPY(mocap_roll, mocap_pitch, mocap_yaw);
-  mocap_roll += mocap_roll > 0 ? -M_PI : M_PI;
+  double r, p, y;
+  m.getRPY(r, p, y);
+  r += r > 0 ? -M_PI : M_PI;
   if ((ros::Time::now() - last_time) > ros::Duration(0.5)) {
     // get offset
-    offset_yaw = (float)mocap_yaw * 180 / M_PI - yaw;
+    offset_yaw = (float)y * 180 / M_PI - rpy.get_z();
     last_time = ros::Time::now();
   }
-
+  mocap_attitude.set(r, p, y);
   // Fill the list if it is not yet initialized
   if (x_list[0] == 0.0 && list_counter == 0) {
     for (int i = 0; i < LIST_SIZE; i++) {
@@ -97,23 +90,19 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr &msg) {
   list_counter = ++list_counter % LIST_SIZE;
 
   int prev = (list_counter + 1) % LIST_SIZE;
-  x_list[list_counter] = mocap.pose.position.x;
-  y_list[list_counter] = mocap.pose.position.y;
-  z_list[list_counter] = -mocap.pose.position.z;
+  pos_list[list_counter].set(mocap.pose.position.x, mocap.pose.position.y,
+                             -mocap.pose.position.z);
   t_list[list_counter] = msg->header.stamp;
 
   ros::Duration dt = t_list[list_counter] - t_list[prev];
 
-  dx = (x_list[list_counter] - x_list[prev]) / dt.toSec();
-  dy = (y_list[list_counter] - y_list[prev]) / dt.toSec();
-  dz = (z_list[list_counter] - z_list[prev]) / dt.toSec();
+  velocity.set((pos_list[list_counter] - pos_list[prev]) / dt.toSec());
 
   calculate_error();
 }
 
 void UavMonitor::baselineCb(const std_msgs::Float32::ConstPtr &msg) {
   baseline = msg->data;
-  // std::cerr << "BASELINE : " << baseline << "\r" <<std::flush;
 }
 
 void UavMonitor::killCb(const std_msgs::Bool::ConstPtr &msg) {
@@ -121,7 +110,9 @@ void UavMonitor::killCb(const std_msgs::Bool::ConstPtr &msg) {
 }
 
 void UavMonitor::startCb(const std_msgs::Bool::ConstPtr &msg) {
-  begin = msg->data;
+  if (msg->data) {
+    sem_post(&begin);
+  }
 }
 
 // Health Functions
@@ -149,17 +140,7 @@ float UavMonitor::get_battery() { return battery; }
 
 // Attitude Functions
 void UavMonitor::set_angle(Telemetry::EulerAngle angle) {
-  roll = angle.roll_deg;
-  pitch = angle.pitch_deg;
-  yaw = angle.yaw_deg;
-}
-
-void UavMonitor::set_actuator_target(Telemetry::ActuatorControlTarget act) {
-  actuator_target = act.controls;
-}
-
-void UavMonitor::set_actuator_status(Telemetry::ActuatorOutputStatus aos) {
-  actuator_status = aos.actuator;
+  rpy.set(angle.roll_deg, angle.pitch_deg, angle.yaw_deg);
 }
 
 bool UavMonitor::command_manipulator(int value) {
@@ -202,8 +183,12 @@ void *UavMonitor::offboard_control(void *arg) {
   attitude.yaw_deg = 0.0f;
   attitude.thrust_value = 0.1f;
 
-  while (!m->begin) {
+  if (sem_wait(&(m->begin)) == -1) {
+    std::cout << "Thread Sync Error. Aborting ... " << std::endl;
+    m->done = true;
+    pthread_exit(NULL);
   }
+
   Action::Result arm_result = action->arm();
   action_error_exit(arm_result, "Arming failed");
   std::cout << "Armed" << std::endl;
@@ -223,10 +208,7 @@ void *UavMonitor::offboard_control(void *arg) {
     addDuration(t, &timeStruct);
     start = end;
     // Control Loop
-    attitude.thrust_value = m->calculate_thrust();
-    attitude.roll_deg = m->calculate_roll();
-    attitude.pitch_deg = m->calculate_pitch();
-    attitude.yaw_deg = m->calculate_yaw();
+    m->set_attitude_targets(&attitude);
     offboard->set_attitude(attitude);
     rate.sleep();
   }
@@ -254,43 +236,15 @@ void *UavMonitor::offboard_control(void *arg) {
   pthread_exit(NULL);
 }
 
-float UavMonitor::calculate_thrust() {
-  float thrust = baseline;
-  thrust += kpz * ez + kdz * edz + kiz * eiz;
+void UavMonitor::set_attitude_targets(Offboard::Attitude *attitude) {
+  Triplet<float> attitude_target(kp * erp + kd * erd + ki * eri);
+  attitude_target.get(&(attitude->roll_deg), &(attitude->pitch_deg),
+                      &(attitude->thrust_value));
+  attitude->yaw_deg = target_yaw - offset_yaw;
 
-  double scale =
-      cos((double)roll * M_PI / 180) * cos((double)pitch * M_PI / 180);
-
-  uav_thrust = thrust;  // / scale;
-  return saturate_minmax(uav_thrust, 0, 0.50);
-}
-
-float UavMonitor::calculate_pitch() {
-  double ky = (kpy * ey + kdy * edy + kiy * eiy);
-  double kx = (kpx * ex + kdx * edx + kix * eix);
-
-  double yaw_rad = (mocap_yaw)*M_PI / 180;
-  // 2 degree offset (from data analysis)
-  // uav_pitch = -2+saturate(-kx * cos(yaw_rad) + -ky * sin(yaw_rad), 6);
-  uav_pitch = -2 + saturate(-kx, 6);
-  return uav_pitch;
-}
-
-float UavMonitor::calculate_roll() {
-  double ky = (kpy * ey + kdy * edy + kiy * eiy);
-  double kx = (kpx * ex + kdx * edx + kix * eix);
-
-  double yaw_rad = (mocap_yaw)*M_PI / 180;
-
-  // uav_roll =  saturate(-kx * sin(yaw_rad) + ky * cos(yaw_rad), 6);
-  uav_roll = saturate(ky, 6);
-  return uav_roll;
-}
-
-float UavMonitor::calculate_yaw() {
-  // double yaw_rad = (yaw+offset_yaw) * M_PI/180;
-  uav_yaw = (float)target_yaw - offset_yaw;
-  return (float)uav_yaw;
+  uav_thrust = attitude->thrust_value;
+  uav_rpy.set(attitude_target);
+  uav_rpy.set_z(attitude->yaw_deg);
 }
 
 float UavMonitor::saturate(double in, double minmax) {
@@ -308,34 +262,26 @@ float UavMonitor::saturate_minmax(double in, double min, double max) {
 }
 
 void UavMonitor::calculate_error() {
-  geometry_msgs::Point error;
-  geometry_msgs::Point error_transformed;
-  error.x = tx - x_list[list_counter];
-  error.y = ty - y_list[list_counter];
-  error.z = tz - z_list[list_counter];
+  Triplet<float> tmp(target - pos_list[list_counter]);
+  geometry_msgs::Point error(tmp.to_point());
 
+  geometry_msgs::Point error_transformed;
   tf2::doTransform(error, error_transformed, yaw_transform);
 
-  geometry_msgs::Point derror;
-  geometry_msgs::Point derror_transformed;
-  derror.x = -dx;
-  derror.y = -dy;
-  derror.z = -dz;
+  tmp.set(Triplet<float>() - velocity);
+  geometry_msgs::Point derror(tmp.to_point());
 
+  geometry_msgs::Point derror_transformed;
   tf2::doTransform(derror, derror_transformed, yaw_transform);
 
-  ex = error_transformed.x;
-  ey = error_transformed.y;
-  ez = error_transformed.z;
+  erp.set(error_transformed);
+  erd.set(derror_transformed);
 
-  edx = derror_transformed.x;
-  edy = derror_transformed.y;
-  edz = derror_transformed.z;
-
-  if (begin) {
-    eix += ex / 100;
-    eiy += ey / 100;
-    eiz += ez / 100;
+  int sval;
+  sem_getvalue(&begin, &sval);
+  if (sval == 0) {
+    eri += erp / 100;
+    eri.saturate(1.2, 1, 1);
   }
 }
 

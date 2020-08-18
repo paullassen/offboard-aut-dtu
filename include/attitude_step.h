@@ -4,13 +4,13 @@
 class AttitudeStep : public UavMonitor {
  public:
   virtual ~AttitudeStep() {}
-
-  virtual float calculate_thrust() { return baseline; }
-
-  virtual float calculate_roll() { return tx; }
-
-  virtual float calculate_pitch() { return ty; }
-
-  virtual float calculate_yaw() { return yaw; }
+  virtual void set_attitude_targets(Offboard::Attitude* attitude) {
+    float tmp;
+    target.get(&(attitude->roll_deg), &(attitude->pitch_deg), &tmp);
+    attitude->yaw_deg = rpy.get_z();
+    attitude->thrust_value = baseline;
+    uav_rpy.set(target);
+    uav_rpy.set_z(attitude->yaw_deg);
+  }
 };
 #endif
