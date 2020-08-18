@@ -83,13 +83,13 @@ int main(int argc, char **argv) {
   ros::Publisher in_pub =
       nh.advertise<geometry_msgs::PointStamped>("att_in", 10);
   ros::Publisher thrust_pub = nh.advertise<std_msgs::Float32>("thrust", 10);
-  ros::Rate rate(50.0);
+  ros::Rate rate(100.0);
 
   /* Create UavMonitor to handle controllers */
   UavMonitor uav;
 
   /* Start Battery Subscriber */
-  Telemetry::Result set_rate_result = telemetry->set_rate_battery(2.0);
+  Telemetry::Result set_rate_result = telemetry->set_rate_battery(10.0);
   if (set_rate_result != Telemetry::Result::Success) {
     std::cout << "Setting batt rate failed:" << set_rate_result << std::endl;
   }
