@@ -14,7 +14,7 @@
   <!-- Use Joystick to to send data -->
   
 	<node pkg="offboard"
-		  type="joy_ctrl"
+		  type="att_joy_test"
 		  name="joycl"
 		  required="true"
 	/>

@@ -145,6 +145,11 @@ target_link_libraries(attitude_test
 	${Boost_LIBRARIES}
 	
 )
+add_executable(att_joy_test src/att_joy_test.cpp)
+target_link_libraries(att_joy_test
+	${catkin_LIBRARIES}
+	${Boost_LIBRARIES}
+	)
 
 add_executable(joy_ctrl src/joystick_ctrl.cpp)
 target_link_libraries(joy_ctrl

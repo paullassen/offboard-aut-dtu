@@ -158,12 +158,12 @@ class Controller {
   void initController(void) {
     buttons.push_back(Button(0, "b", [this] { this->kill.data = true; }));
     buttons.push_back(Button(1, "a"));
-    buttons.push_back(Button(2, "y", [this] { this->baseline.data -= 0.1; }));
-    buttons.push_back(Button(3, "x", [this] { this->baseline.data += 0.1; }));
-    buttons.push_back(Button(4, "Lb", [this] { this->yaw.data -= 5; }));
-    buttons.push_back(Button(5, "Rb", [this] { this->yaw.data += 5; }));
-    buttons.push_back(Button(6, "Lt", [this] { this->target.z -= 0.5; }));
-    buttons.push_back(Button(7, "Rt", [this] { this->target.z += 0.5; }));
+    buttons.push_back(Button(2, "y", [this] { this->baseline.data -= 0.01; }));
+    buttons.push_back(Button(3, "x", [this] { this->baseline.data += 0.01; }));
+    buttons.push_back(Button(4, "Lb", [this] { this->yaw.data -= 2.5; }));
+    buttons.push_back(Button(5, "Rb", [this] { this->yaw.data += 2.5; }));
+    buttons.push_back(Button(6, "Lt", [this] { this->target.z -= 0.1; }));
+    buttons.push_back(Button(7, "Rt", [this] { this->target.z += 0.1; }));
     buttons.push_back(Button(8, "minus", [this] {
       this->command_manipulator(MANIPULATOR_MINIMUM);
     }));
@@ -177,25 +177,25 @@ class Controller {
     cross.push_back(Cross(
         4, "LR",
         [this] {
-          this->target.x -= 0.1;
-          if (this->target.x < -1.0) this->target.x = -0.1;
+          this->target.x -= 25.0;
+          if (this->target.x < -25.0) this->target.x = -25.0;
           this->reset_relative_target();
         },
         [this] {
-          this->target.x += 0.1;
-          if (this->target.x > 1.0) this->target.x = 0.1;
+          this->target.x += 25.0;
+          if (this->target.x > 25.0) this->target.x = 25.0;
           this->reset_relative_target();
         }));
     cross.push_back(Cross(
         5, "UD",
         [this] {
-          this->target.y -= 0.1;
-          if (this->target.y < -1.0) this->target.y = -0.1;
+          this->target.y -= 25.0;
+          if (this->target.y < -25.0) this->target.y = -25.0;
           this->reset_relative_target();
         },
         [this] {
-          this->target.y += 0.1;
-          if (this->target.y > 1.0) this->target.y = 0.1;
+          this->target.y += 25.0;
+          if (this->target.y > 25.0) this->target.y = 25.0;
           this->reset_relative_target();
         }));
 
