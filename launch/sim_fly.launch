@@ -2,7 +2,7 @@
 	<group ns="HexyBoi">
 	
 		<node pkg="offboard"
-			  type="ros_interface"
+			  type="attitude_test"
 			  name="fly"
 			  output="screen">
 			  
