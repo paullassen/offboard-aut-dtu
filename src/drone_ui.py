@@ -320,10 +320,10 @@ class Status:
         self.st.data = True
 
     def incYaw(self):
-        self.yaw.data += 10
+        self.yaw.data += 2.5
 
     def decYaw(self):
-        self.yaw.data -= 10
+        self.yaw.data -= 2.5
 
 def main():
     global done
@@ -373,10 +373,8 @@ def main():
                 elif chr(k) == 'g':
                     stat.decZz()
                 elif chr(k) == 'z':
-                    #stat.incYy()
                     stat.incXx()
                 elif chr(k) == 'x':
-                    #stat.decYy()
                     stat.decXx()
                 elif chr(k) == 'y':
                     stat.incKpxy()
