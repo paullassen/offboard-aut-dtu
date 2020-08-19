@@ -253,7 +253,8 @@ void UavMonitor::set_attitude_targets(Offboard::Attitude *attitude) {
   attitude->yaw_deg = target_yaw - offset_yaw;
 
   uav_thrust = attitude->thrust_value;
-  uav_rpy.set(attitude_target);
+  uav_rpy.set_x(attitude->roll_deg);
+  uav_rpy.set_y(attitude->pitch_deg);
   uav_rpy.set_z(attitude->yaw_deg);
 }
 
