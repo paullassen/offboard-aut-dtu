@@ -1,0 +1,12 @@
+<launch>
+	<group ns="HexyBoi">
+
+		<node pkg="offboard"
+			  type="waypoint"
+			  name="waypoint"
+			  output="screen">
+		</node>
+
+	</group>
+
+</launch>
