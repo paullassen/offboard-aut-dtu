@@ -88,8 +88,8 @@ include_directories(
 #add_executable(att src/att.cpp)
 #target_link_libraries(att ${catkin_LIBRARIES})
 
-add_library(mavsdk_helper src/mavsdk_helper.cpp)
-add_library(uav_monitor src/uav_monitor.cpp)
+add_library(mavsdk_helper src/flight/mavsdk_helper.cpp)
+add_library(uav_monitor src/flight/uav_monitor.cpp)
 
 target_link_libraries(mavsdk_helper
     MAVSDK::mavsdk_telemetry
@@ -111,13 +111,8 @@ target_link_libraries(uav_monitor
 	${catkin_LIBRARIES}
 	)
 
-add_executable(ros_interface src/ros_interface.cpp)
-add_executable(mocap_to_quat src/mocap_to_quat.cpp)
-add_executable(attitude_test src/att_test.cpp)
-target_link_libraries(mocap_to_quat
-	${catkin_LIBRARIES}
-	${Boost_LIBRARIES}
-	)
+add_executable(ros_interface src/flight/ros_interface.cpp)
+add_executable(attitude_test src/flight/att_test.cpp)
 target_link_libraries(ros_interface 
 	${catkin_LIBRARIES}
     MAVSDK::mavsdk_telemetry
@@ -145,14 +140,20 @@ target_link_libraries(attitude_test
 	${Boost_LIBRARIES}
 	
 )
-add_executable(att_joy_test src/att_joy_test.cpp)
+add_executable(att_joy_test src/control/att_joy_test.cpp)
 target_link_libraries(att_joy_test
 	${catkin_LIBRARIES}
 	${Boost_LIBRARIES}
 	)
 
-add_executable(joy_ctrl src/joystick_ctrl.cpp)
+add_executable(joy_ctrl src/control/joystick_ctrl.cpp)
 target_link_libraries(joy_ctrl
+	${catkin_LIBRARIES}
+	${Boost_LIBRARIES}
+	)
+
+add_executable(waypoint src/control/waypoint.cpp)
+target_link_libraries(waypoint
 	${catkin_LIBRARIES}
 	${Boost_LIBRARIES}
 	)

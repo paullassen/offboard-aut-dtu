@@ -287,6 +287,7 @@ void UavMonitor::calculate_error() {
 
   erp.set(error_transformed);
   erd.set(derror_transformed);
+
   int sval;
   sem_getvalue(&begin, &sval);
   if (sval > 0) {
