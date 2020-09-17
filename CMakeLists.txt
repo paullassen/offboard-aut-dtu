@@ -25,7 +25,7 @@ find_package(MAVSDK REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Boost REQUIRED)
 
-include_directories(${CURSES_INCLUDE_DIR})
+# include_directories(${CURSES_INCLUDE_DIR})
 
 # find_package(Boost REQUIRED COMPONENTS system)
 
