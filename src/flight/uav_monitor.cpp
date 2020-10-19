@@ -119,6 +119,13 @@ void UavMonitor::startCb(const std_msgs::Bool::ConstPtr &msg) {
   }
 }
 
+void UavMonitor::trimCb(const std_msgs::Bool::ConstPtr &msg) {
+  if (!last_trim_msg && msg->data) {
+    set_trim();
+  }
+  last_trim_msg = msg->data;
+}
+
 // Health Functions
 void UavMonitor::set_health(Telemetry::Health h) {
   health.gyro = h.is_gyrometer_calibration_ok;
@@ -317,6 +324,8 @@ void *UavMonitor::ros_run(void *arg) {
       nh->subscribe<std_msgs::Bool>("kill", 10, &UavMonitor::killCb, uav);
   ros::Subscriber start_sub =
       nh->subscribe<std_msgs::Bool>("start", 10, &UavMonitor::startCb, uav);
+  ros::Subscriber trim_sub =
+      nh->subscribe<std_msgs::Bool>("trim", 10, &UavMonitor::trimCb, uav);
   ros::Subscriber kp_sub =
       nh->subscribe<geometry_msgs::Point>("kp", 10, &UavMonitor::kpCb, uav);
   ros::Subscriber kd_sub =

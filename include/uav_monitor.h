@@ -216,6 +216,7 @@ class UavMonitor {
   Triplet<float> uav_rpy;
 
   Triplet<float> trim;
+  bool last_trim_msg;
 
   float baseline = 0.1;
   float uav_thrust = 0;
@@ -265,6 +266,7 @@ class UavMonitor {
   void kiCb(const geometry_msgs::Point::ConstPtr& msg);
   void killCb(const std_msgs::Bool::ConstPtr& msg);
   void startCb(const std_msgs::Bool::ConstPtr& msg);
+  void trimCb(const std_msgs::Bool::ConstPtr& msg);
   void baselineCb(const std_msgs::Float32::ConstPtr& msg);
   void targetCb(const geometry_msgs::Point::ConstPtr& msg);
   void yawCb(const std_msgs::Float32::ConstPtr& msg);
