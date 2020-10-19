@@ -215,6 +215,8 @@ class UavMonitor {
   Triplet<float> rpy;
   Triplet<float> uav_rpy;
 
+  Triplet<float> trim;
+
   float baseline = 0.1;
   float uav_thrust = 0;
 
@@ -240,6 +242,8 @@ class UavMonitor {
   // controller
   virtual void set_attitude_targets(Offboard::Attitude* attitude);
   void calculate_error();
+
+  void set_trim();
 
   float saturate(double in, double minmax);
   float saturate_minmax(double in, double min, double max);

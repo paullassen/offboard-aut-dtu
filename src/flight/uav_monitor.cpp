@@ -248,8 +248,8 @@ void UavMonitor::set_attitude_targets(Offboard::Attitude *attitude) {
   attitude_target.get(&(attitude->pitch_deg), &(attitude->roll_deg),
                       &(attitude->thrust_value));
   attitude->thrust_value += baseline;
-  attitude->pitch_deg -= 2;
-  attitude->roll_deg += 1;
+  attitude->pitch_deg -= trim.get_x();
+  attitude->roll_deg += trim.get_y();
   attitude->yaw_deg = target_yaw - offset_yaw;
 
   uav_thrust = attitude->thrust_value;
@@ -292,11 +292,18 @@ void UavMonitor::calculate_error() {
   sem_getvalue(&begin, &sval);
   if (sval > 0) {
     eri += (erp / 100);
-	eri.saturate(1, 2, 6);
+    eri.saturate(6, 6, 6);
   } else {
 	  eri.set(erp);
 	  eri /= Triplet<float>(100, 100, 100);
   }
+}
+
+void UavMonitor::set_trim() {
+  trim.set(eri);
+  trim.set_z(0);
+  eri.set_x(0);
+  eri.set_y(0);
 }
 
 void *UavMonitor::ros_run(void *arg) {
