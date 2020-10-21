@@ -72,7 +72,7 @@ class Triplet {
   T get_x(void) const { return x; }
   T get_y(void) const { return y; }
   T get_z(void) const { return z; }
-  T get(float* x, float* y, float* z) {
+  void get(float* x, float* y, float* z) {
     *x = get_x();
     *y = get_y();
     *z = get_z();
