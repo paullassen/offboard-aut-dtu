@@ -106,7 +106,7 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr &msg) {
 }
 
 void UavMonitor::baselineCb(const std_msgs::Float32::ConstPtr &msg) {
-  baseline = msg->data;
+  // baseline = msg->data;
 }
 
 void UavMonitor::killCb(const std_msgs::Bool::ConstPtr &msg) {
@@ -145,6 +145,7 @@ bool UavMonitor::get_health() {
 // Battery Functions
 void UavMonitor::set_battery(Telemetry::Battery bat) {
   health.battery = bat.voltage_v;
+  baseline = (9.80665 * 2.2 / 0.3368) * 1 / (health.battery * health.battery);
 }
 
 float UavMonitor::get_battery() { return battery; }
