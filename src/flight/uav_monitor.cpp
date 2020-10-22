@@ -18,7 +18,6 @@
 #include <queue>
 #include <thread>
 // Standard C libraries
-#include <ncurses.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <string.h>
