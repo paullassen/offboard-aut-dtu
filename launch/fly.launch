@@ -2,6 +2,8 @@
 	<!--group ns="HexyBoi"-->
 	
 		<!--include file="$(find offboard)/launch/dynamixel.launch"/-->
+		<arg name="drone_param_file"
+			 default="$(find offboard)/config/drone.yaml" />
 
 		<node pkg="offboard"
 			  type="ros_interface"
@@ -9,6 +11,8 @@
 			  output="screen">
 			  
 				<param name="~url" type="string" value="serial:///dev/ttyACM0" />
+				<param name="~mode" type="int" value="0"/>
+				<rosparam file="$(arg drone_param_file)" command="load" />
 		</node>
 
 	<!-- /group-->

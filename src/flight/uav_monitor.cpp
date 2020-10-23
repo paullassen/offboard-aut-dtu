@@ -88,7 +88,7 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr &msg) {
   }
   list_counter++;
   list_counter %= LIST_SIZE;
-//  std::cout << list_counter << std::endl;
+  //  std::cout << list_counter << std::endl;
 
   int prev = (list_counter + 1) % LIST_SIZE;
   pos_list[list_counter].set(mocap.pose.position.x, mocap.pose.position.y,
@@ -98,8 +98,9 @@ void UavMonitor::mocapCb(const geometry_msgs::PoseStamped::ConstPtr &msg) {
   ros::Duration dt = t_list[list_counter] - t_list[prev];
 
   velocity.set((pos_list[list_counter] - pos_list[prev]) / dt.toSec());
-//std::cout <<LIST_SIZE<<"\t" <<list_counter <<"\t"<<prev<<"\t" << t_list[list_counter].toNSec() -  t_list[prev].toNSec() << "\t" << velocity.get_x() << std::endl;
-  
+  // std::cout <<LIST_SIZE<<"\t" <<list_counter <<"\t"<<prev<<"\t" <<
+  // t_list[list_counter].toNSec() -  t_list[prev].toNSec() << "\t" <<
+  // velocity.get_x() << std::endl;
 
   calculate_error();
 }
@@ -250,7 +251,7 @@ void *UavMonitor::offboard_control(void *arg) {
 
 void UavMonitor::set_attitude_targets(Offboard::Attitude *attitude) {
   Triplet<float> attitude_target(kp * erp + kd * erd + ki * eri);
-  attitude_target *= Triplet<float> (-1,1,1);
+  attitude_target *= Triplet<float>(-1, 1, 1);
   attitude_target.saturate(8, 8, 0.3);
   attitude_target.get(&(attitude->pitch_deg), &(attitude->roll_deg),
                       &(attitude->thrust_value));
@@ -280,7 +281,11 @@ float UavMonitor::saturate_minmax(double in, double min, double max) {
 }
 
 void UavMonitor::calculate_error() {
-  Triplet<float> tmp(target - pos_list[list_counter]);
+  Triplet<float> offset;
+  if (drone_params.mode == 1) {
+    offset.set_z(sin(uav_rpy.get_x() * M_PI / 180) * drone_params.length);
+  }
+  Triplet<float> tmp(target + offset - pos_list[list_counter]);
   geometry_msgs::Point error(tmp.to_point());
 
   geometry_msgs::Point error_transformed;
@@ -301,8 +306,8 @@ void UavMonitor::calculate_error() {
     eri += (erp / 100);
     eri.saturate(6, 6, 6);
   } else {
-	  eri.set(erp);
-	  eri /= Triplet<float>(100, 100, 100);
+    eri.set(erp);
+    eri /= Triplet<float>(100, 100, 100);
   }
 }
 

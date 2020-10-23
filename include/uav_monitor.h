@@ -29,6 +29,12 @@
 #define MANIPULATOR_MAXIMUM 605
 #define MANIPULATOR_MINIMUM 405
 
+struct param_struct {
+	float mass;
+	float length;
+	int mode;
+};
+
 template <class T>
 class Triplet {
  private:
@@ -188,6 +194,10 @@ using namespace mavsdk;
 class UavMonitor {
  public:
   UavMonitor() { sem_init(&begin, 0, 0); }
+  UavMonitor(struct param_struct ps) {
+    sem_init(&begin, 0, 0);
+    drone_params = ps;
+  }
   virtual ~UavMonitor() {}
   uint64_t dur = 0;
   ros::Time last_time = ros::Time::now();
@@ -232,7 +242,8 @@ class UavMonitor {
   offboard::Health health;
   // Battery
   float battery = 0.0;
-
+  // Params
+  struct param_struct drone_params;
 
   // Set Functions
   void set_health(Telemetry::Health);
@@ -276,7 +287,7 @@ class UavMonitor {
   bool deploy_manipulator(void);
   bool retract_manipulator(void);
   bool command_manipulator(int);
-
+  
   // Threads
   static void* offboard_control(void* arg);
   static void* ros_run(void* args);

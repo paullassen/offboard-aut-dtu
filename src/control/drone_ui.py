@@ -325,6 +325,12 @@ class Status:
     def decYaw(self):
         self.yaw.data -= 2.5
 
+    def manExt(self):
+        os.system("rosrun offboard dynamixel_ctrl position:=1")
+
+    def manRet(self):
+        os.system("rosrun offboard dynamixel_ctrl position:=0")
+
 def main():
     global done
     init_anykey()
@@ -365,9 +371,9 @@ def main():
                 elif chr(k) == 'q':
                     stat.kill()
                 elif chr(k) == 'r':
-                    stat.incBl()
+                    stat.manExt()
                 elif chr(k) == 'f':
-                    stat.decBl()
+                    stat.manRet()
                 elif chr(k) == 't':
                     stat.incZz()
                 elif chr(k) == 'g':

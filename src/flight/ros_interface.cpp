@@ -49,13 +49,30 @@ int main(int argc, char **argv) {
   if (private_node_handle.getParam("url", connection_url)) {
     std::cout << "Found param" << std::endl;
     connection_result = dc.add_any_connection(connection_url);
-  } else if (argc == 2) {
-    connection_url = argv[1];
-    connection_result = dc.add_any_connection(connection_url);
   } else {
     usage(argv[0]);
     return 1;
   }
+
+  struct param_struct drone_params;
+  if (private_node_handle.getParam("mode", drone_params.mode)) {
+    std::cout << "Mode Found" << std::endl;
+  } else {
+    drone_params.mode = 0;
+  }
+
+  if (private_node_handle.getParam("mode", drone_params.mass)) {
+    std::cout << "Mass Found" << std::endl;
+  } else {
+    drone_params.mass = 0;
+  }
+
+  if (private_node_handle.getParam("mode", drone_params.length)) {
+    std::cout << "Length Found" << std::endl;
+  } else {
+    drone_params.length = 0;
+  }
+
   /* Attempt connection */
   if (connection_result != ConnectionResult::Success) {
     std::cout << "Connection Failed: " << connection_result << std::endl;
@@ -86,8 +103,10 @@ int main(int argc, char **argv) {
   ros::Rate rate(100.0);
 
   /* Create UavMonitor to handle controllers */
-  UavMonitor uav;
-
+  UavMonitor uav(drone_params);
+  std::cout << "UAV created with:\n\tMass:\t" << uav.drone_params.mass
+            << std::endl;
+  std::cout << "\tLength:\t" << uav.drone_params.length << std::endl;
   /* Start Battery Subscriber */
   Telemetry::Result set_rate_result = telemetry->set_rate_battery(10.0);
   if (set_rate_result != Telemetry::Result::Success) {

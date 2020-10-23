@@ -157,6 +157,11 @@ target_link_libraries(waypoint
 	${catkin_LIBRARIES}
 	${Boost_LIBRARIES}
 	)
+add_executable(dynamixel_ctrl src/control/dynamixel_ctrl.cpp)
+target_link_libraries(dynamixel_ctrl
+	${catkin_LIBRARIES}
+	${Boost_LIBRARIES}
+	)
 #add_executable(${PROJECT_NAME}_node src/pos.cpp)
 
 # set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
