@@ -227,6 +227,7 @@ class UavMonitor {
 
   Triplet<float> trim;
   bool last_trim_msg;
+  bool trimmed;
 
   float baseline = 0.1;
   float uav_thrust = 0;

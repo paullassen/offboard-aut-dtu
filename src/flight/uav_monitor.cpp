@@ -122,6 +122,7 @@ void UavMonitor::startCb(const std_msgs::Bool::ConstPtr &msg) {
 void UavMonitor::trimCb(const std_msgs::Bool::ConstPtr &msg) {
   if (!last_trim_msg && msg->data) {
     set_trim();
+    trimmed = true;
   }
   last_trim_msg = msg->data;
 }
@@ -304,7 +305,11 @@ void UavMonitor::calculate_error() {
   sem_getvalue(&begin, &sval);
   if (sval > 0) {
     eri += (erp / 100);
-    eri.saturate(6, 6, 6);
+    if (trimmed) {
+      eri.saturate(1, 1, 1);
+    } else {
+      eri.saturate(6, 6, 6);
+    }
   } else {
     eri.set(erp);
     eri /= Triplet<float>(100, 100, 100);
